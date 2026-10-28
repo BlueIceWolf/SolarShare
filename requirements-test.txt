@@ -1,0 +1,2 @@
+# Real Home Assistant boundary tests run on Linux / Python >=3.14.2.
+homeassistant==2026.10.4

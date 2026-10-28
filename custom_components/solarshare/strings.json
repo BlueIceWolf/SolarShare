@@ -1,0 +1,46 @@
+{
+  "title": "SolarShare",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add apartment",
+        "description": "Create one entry per apartment. Select a cumulative energy meter (Wh, kWh or MWh), not a power sensor. Initial readings and gaps are never billed. Maximum power bounds plausible meter increments.",
+        "data": {
+          "name": "Apartment name",
+          "meter": "Cumulative energy meter",
+          "max_power_kw": "Maximum plausible load"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Enter an apartment name.",
+      "meter_assigned": "This meter is already assigned to another active apartment. Pause that entry first.",
+      "recursive_meter": "SolarShare output sensors cannot be used as sources.",
+      "not_cumulative": "Choose an energy sensor with state class total or total_increasing.",
+      "unsupported_unit": "Supported units are Wh, kWh and MWh."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit apartment and meter assignment",
+        "description": "Totals remain with this apartment. Changing the source starts a new measurement baseline. Pause releases the meter for reassignment. Acknowledge only after checking a reset, source identity change or implausible jump; skipped energy is never recovered automatically.",
+        "data": {
+          "name": "Apartment name",
+          "meter": "Cumulative energy meter",
+          "max_power_kw": "Maximum plausible load",
+          "paused": "Pause this apartment and release its meter",
+          "acknowledge": "I checked the source; clear the review hold and start a new baseline"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Enter an apartment name.",
+      "meter_assigned": "This meter is already assigned to another active apartment. Pause that entry first.",
+      "recursive_meter": "SolarShare output sensors cannot be used as sources.",
+      "not_cumulative": "Choose an energy sensor with state class total or total_increasing.",
+      "unsupported_unit": "Supported units are Wh, kWh and MWh."
+    }
+  }
+}
+

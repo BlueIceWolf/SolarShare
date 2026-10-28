@@ -1,0 +1,46 @@
+{
+  "title": "SolarShare",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wohnung hinzufügen",
+        "description": "Pro Wohnung einen Eintrag anlegen. Einen kumulativen Energiezähler (Wh, kWh oder MWh) auswählen, keinen Leistungssensor. Anfangsstände und Datenlücken werden nicht abgerechnet. Die maximale Leistung begrenzt plausible Zählerzuwächse.",
+        "data": {
+          "name": "Name der Wohnung",
+          "meter": "Kumulativer Energiezähler",
+          "max_power_kw": "Maximale plausible Leistung"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Bitte einen Namen für die Wohnung eingeben.",
+      "meter_assigned": "Dieser Zähler ist bereits einer aktiven Wohnung zugeordnet. Den bisherigen Eintrag zuerst pausieren.",
+      "recursive_meter": "SolarShare-Ausgabesensoren können nicht als Quelle verwendet werden.",
+      "not_cumulative": "Einen Energiesensor mit Zustandsklasse total oder total_increasing auswählen.",
+      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wohnung und Zählerzuordnung bearbeiten",
+        "description": "Der erfasste Verbrauch bleibt bei dieser Wohnung. Ein Zählerwechsel setzt eine neue Messbasis. Pausieren gibt den Zähler zur Neuzuordnung frei. Eine Prüfsperre erst nach Prüfung eines Resets, einer geänderten Quelle oder eines unplausiblen Sprungs bestätigen. Übersprungene Energie wird nicht automatisch nachgetragen.",
+        "data": {
+          "name": "Name der Wohnung",
+          "meter": "Kumulativer Energiezähler",
+          "max_power_kw": "Maximale plausible Leistung",
+          "paused": "Wohnung pausieren und Zähler freigeben",
+          "acknowledge": "Quelle geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Bitte einen Namen für die Wohnung eingeben.",
+      "meter_assigned": "Dieser Zähler ist bereits einer aktiven Wohnung zugeordnet. Den bisherigen Eintrag zuerst pausieren.",
+      "recursive_meter": "SolarShare-Ausgabesensoren können nicht als Quelle verwendet werden.",
+      "not_cumulative": "Einen Energiesensor mit Zustandsklasse total oder total_increasing auswählen.",
+      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh."
+    }
+  }
+}
+
