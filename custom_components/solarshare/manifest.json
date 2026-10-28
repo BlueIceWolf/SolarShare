@@ -1,0 +1,12 @@
+{
+  "domain": "solarshare",
+  "name": "SolarShare",
+  "codeowners": ["@BlueIceWolf"],
+  "config_flow": true,
+  "documentation": "https://github.com/BlueIceWolf/SolarShare",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/BlueIceWolf/SolarShare/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
