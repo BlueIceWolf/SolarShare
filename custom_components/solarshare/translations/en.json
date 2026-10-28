@@ -87,12 +87,13 @@
       },
       "advanced": {
         "title": "Advanced settings",
-        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources.",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources. PV night mode is on by default and needs a valid sun.sun state. Only confirmed night permits zero-generation assumptions for missing PV counters. Physical meter readings are not set to zero. Grid and battery readings are never substituted.",
         "data": {
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "acknowledge": "Sources checked: clear review hold and establish new baselines",
-          "require_fresh_reports": "Strict freshness: require regular reports from every meter"
+          "require_fresh_reports": "Strict freshness: require regular reports from every meter",
+          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters"
         }
       },
       "site_menu": {
@@ -240,12 +241,13 @@
       },
       "advanced": {
         "title": "Advanced settings",
-        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources.",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources. PV night mode is on by default and needs a valid sun.sun state. Only confirmed night permits zero-generation assumptions for missing PV counters. Physical meter readings are not set to zero. Grid and battery readings are never substituted.",
         "data": {
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "acknowledge": "Sources checked: clear review hold and establish new baselines",
-          "require_fresh_reports": "Strict freshness: require regular reports from every meter"
+          "require_fresh_reports": "Strict freshness: require regular reports from every meter",
+          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters"
         }
       },
       "site_menu": {
@@ -335,7 +337,9 @@
           "storage_error": "Storage error – calculation paused",
           "stopped": "Stopped",
           "pv_measurement_boundary_unclear": "Select AC PV sources",
-          "overlapping_pv_sources": "Same inverter counted twice"
+          "overlapping_pv_sources": "Same inverter counted twice",
+          "observing_pv_night": "Calculation active – PV night mode (zero generation assumed)",
+          "pv_night_transition": "New baseline for PV night/day transition"
         }
       }
     }

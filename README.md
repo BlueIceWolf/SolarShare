@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.5** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.2.6** ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -147,7 +147,8 @@ Alle 60 Sekunden werden die aktuell verfügbaren kumulativen Zählerstände geme
 abgetastet. Ein unveränderter PV-Zähler nachts oder ein stillstehender Lade-/Bezugs-
 zähler ist weiterhin ein gültiger Stand. Für die Differenzberechnung braucht er nicht
 alle fünf Minuten einen neuen Änderungsbericht. Fehlende, `unknown`, `unavailable`,
-wiederhergestellte oder ungültige Quellen werden niemals durch null ersetzt.
+wiederhergestellte oder ungültige Quellzählerstände werden nicht erfunden. Die
+ausdrückliche PV-Nachtannahme für Ertragszuwächse ist unten getrennt beschrieben.
 
 Die Standardberechnung ist eine **Zuordnung anhand verfügbarer Zustandsschnappschüsse**,
 keine nachgewiesen zeitsynchrone Messung jeder Quelle. Meldet eine Quellintegration
@@ -196,6 +197,34 @@ ebenfalls nicht definiert. Gleichzeitig gemessener Bezug/Einspeisung oder
 Ladung/Entladung, Batterieexport unklarer Herkunft und unplausible Energiebilanzen
 werden nicht automatisch aufgeteilt. Dafür ist feinere Messtechnik bzw. ein
 erweitertes Modell nötig.
+
+## Nächtlicher Neustart und schlafende PV-Wechselrichter
+
+Seit 0.2.6 ist unter **Erweiterte Einstellungen** der PV-Nachtmodus standardmäßig
+aktiv. Wenn `sun.sun` einen gültigen, nicht wiederhergestellten Zustand
+`below_horizon` meldet, können fehlende, unbekannte oder nicht verfügbare PV-Zähler
+als schlafende Wechselrichter behandelt werden. Dann wird **für den Energiezuwachs
+dieser PV-Quellen null angenommen**. Das funktioniert auch nach einem HA-Neustart,
+wenn diese WR noch überhaupt keinen Zahlenwert geliefert haben.
+
+Dies ist eine ausgewiesene Nachtannahme, kein gemessener PV-Zählerstand. Die realen
+Quellzähler bleiben nicht verfügbar, wenn sie nichts liefern. Letzte gültige Stände
+werden nur für die Diagnose gespeichert. Der Datenqualitätssensor zeigt den
+PV-Nachtbetrieb und `pv_night_assumed_zero`; `last_known_pv_counters_kwh` enthält
+gegebenenfalls die früheren echten Stände. Beim Wechsel zwischen echten Zählern und
+Nachtannahme startet eine neue Messbasis. Ein morgens wieder auftauchender hoher
+Gesamtzählerstand wird somit nicht als frische Erzeugung verrechnet.
+
+Ein tatsächlich verfügbarer PV-Zähler wird auch nachts normal ausgewertet, selbst
+wenn er Zuwächse meldet. Tagsüber oder bei unbekanntem Sonnenstand gibt es keine
+Nullannahme. Die HA-Standort-/Sonnenkonfiguration muss stimmen. Wer diese Annahme
+nicht verwenden möchte, kann den Nachtmodus ausschalten.
+
+**Netzbezug, Einspeisung, Batterie und Wohnungszähler müssen weiterhin reale gültige
+Stände liefern.** Schläft auch deren Messquelle und meldet unbekannte Werte, kann
+die vollständige Verteilung weiterhin nicht erfolgen. Dafür ist eine unabhängig
+verfügbare Messquelle nötig. Die Nachtannahme darf nur für reine PV-Erzeugungsquellen
+verwendet werden, nicht für einen AC-Gesamtzähler, der nachts Batteriestrom mitzählt.
 
 ## Datenlücken, Neustarts und Speicherung
 
@@ -249,3 +278,5 @@ Wenn ein Wechselrichter nachts die Kommunikation abschaltet und auch die Netzwer
 nicht mehr liefert, kann SolarShare ohne eine unabhängig verfügbare Messquelle keine
 vollständige Gebäudebilanz berechnen. Prüfe die Quellintegration bzw. die ausgewählten
 Zähler. Einstellungen allein können fehlende Messwerte nicht rekonstruieren.
+
+Für ausschließlich schlafende PV-Quellen gilt die oben beschriebene explizite Nachtannahme; fehlende Netz-/Batteriewerte bleiben davon ausgenommen.

@@ -92,6 +92,7 @@ class InstallationWizard:
                     "pv_measurement": "ac" if old.get("sources") else "unknown",
                     "pv_details": [],
                     "require_fresh_reports": False,
+                    "pv_night_sleep": True,
                 }.items()
             }
         )
@@ -358,6 +359,7 @@ class InstallationWizard:
         fields[
             probatio.Optional("require_fresh_reports", default=self.site["require_fresh_reports"])
         ] = bool
+        fields[probatio.Optional("pv_night_sleep", default=self.site["pv_night_sleep"])] = bool
         return self.async_show_form(step_id="advanced", data_schema=probatio.Schema(fields))
 
     async def async_step_site_menu(self, user_input=None):

@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .accounting import energy_kwh
 from .const import DOMAIN
+from .pv_night import PVNight
 from .pv_sources import overlapping_growatt_totals, source_meters, total_pv
 from .site_accounting import SiteLedger
 
@@ -30,6 +31,7 @@ class SiteRuntime:
         self.signal = f"{DOMAIN}_{entry.entry_id}"
         self.meters = source_meters(self.config["sources"])
         self.pv_keys = tuple(key for key in self.meters if key == "pv" or key.startswith("pv:"))
+        self.night = PVNight(self.pv_keys, enabled=self.config.get("pv_night_sleep", True))
         self.apartments = self.config["apartments"]
         active = [item for item in self.apartments if not item.get("paused")]
         self.meters.update({f"apt:{item['id']}": item["meter"] for item in active})
@@ -67,8 +69,10 @@ class SiteRuntime:
                 self.ledger.restore(data["ledger"])
                 self.identities = data["identities"]
                 self.legacy_total = data.get("legacy_total")
+                self.night.restore(data.get("last_pv_readings"))
                 if data["revision"] != self.config["revision"]:
                     self.identities = {}
+                    self.night.last_good = {}
                 if data.get("review_token") != self.config.get("review_token"):
                     self.ledger.review = False
             elif self.entry.data.get("ledger_initialized"):
@@ -90,6 +94,7 @@ class SiteRuntime:
                 "identities": self.identities,
                 "legacy_total": self.legacy_total,
                 "review_token": self.config.get("review_token"),
+                "last_pv_readings": self.night.snapshot(),
             }
         )
         if not self.entry.data.get("site_ledger_initialized"):
@@ -101,7 +106,9 @@ class SiteRuntime:
     def async_start(self):
         self.active = True
         self.unsubs = [
-            async_track_state_change_event(self.hass, list(self.meters.values()), self._changed),
+            async_track_state_change_event(
+                self.hass, [*self.meters.values(), "sun.sun"], self._changed
+            ),
             async_track_time_interval(self.hass, self._tick, timedelta(seconds=60)),
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown),
         ]
@@ -112,6 +119,9 @@ class SiteRuntime:
         if not self.active or self.storage_failed:
             return
         state = event.data.get("new_state")
+        if event.data["entity_id"] == "sun.sun":
+            self._queue()
+            return
         # Evaluate invalid states immediately. Valid states are sampled together
         # on the common timer, rather than assigning an event from one apartment.
         if (
@@ -123,7 +133,17 @@ class SiteRuntime:
                 if entity_id == event.data["entity_id"]:
                     self.readings[key] = None
                     self.source_states[key] = state.state if state is not None else "missing"
-                    affects_accounting |= key in self.accounting_keys
+                    night_pv = (
+                        key in self.pv_keys
+                        and self.night.enabled
+                        and self._sun_state() == "below_horizon"
+                        and (
+                            state is None
+                            or state.state in ("unknown", "unavailable")
+                            or state.attributes.get("restored")
+                        )
+                    )
+                    affects_accounting |= key in self.accounting_keys and not night_pv
                     if key in self.pv_keys:
                         self.readings["pv"] = None
             if affects_accounting:
@@ -133,6 +153,10 @@ class SiteRuntime:
     @callback
     def _tick(self, now):
         self._queue()
+
+    def _sun_state(self):
+        sun = self.hass.states.get("sun.sun")
+        return sun.state if sun is not None and not sun.attributes.get("restored") else None
 
     @callback
     def _queue(self):
@@ -144,7 +168,7 @@ class SiteRuntime:
             if self.storage_failed:
                 return
             now = time.time()
-            readings, timestamps = {}, {}
+            readings, timestamps, eligible_night_pv = {}, {}, set()
             for key, entity_id in self.meters.items():
                 source = er.async_get(self.hass).async_get(entity_id)
                 identity = (
@@ -162,6 +186,12 @@ class SiteRuntime:
                 state = self.hass.states.get(entity_id)
                 self.source_states[key] = state.state if state is not None else "missing"
                 readings[key] = None
+                if key in self.pv_keys and (
+                    state is None
+                    or state.state in ("unknown", "unavailable")
+                    or state.attributes.get("restored")
+                ):
+                    eligible_night_pv.add(key)
                 if (
                     state
                     and not state.attributes.get("restored")
@@ -179,10 +209,19 @@ class SiteRuntime:
                 timestamps.pop("pv", None)
             self.readings = readings
             self.reading_times = timestamps
+            effective, effective_times, transition = self.night.apply(
+                readings, timestamps, now, self._sun_state(), eligible_night_pv
+            )
+            if transition:
+                self.ledger.interrupt("pv_night_transition")
             if overlapping_growatt_totals(self.config["sources"].get("pv")):
                 self.ledger.interrupt("overlapping_pv_sources")
             elif self.config.get("pv_measurement", "ac") == "ac":
-                self.ledger.observe(readings, timestamps, now, dt_util.now().date().isoformat())
+                self.ledger.observe(
+                    effective, effective_times, now, dt_util.now().date().isoformat()
+                )
+                if self.ledger.available and self.night.sleeping:
+                    self.ledger.reason = "observing_pv_night"
             else:
                 self.ledger.interrupt("pv_measurement_boundary_unclear")
             try:

@@ -185,6 +185,8 @@ class SiteStatus(SiteEntity):
         "stopped",
         "pv_measurement_boundary_unclear",
         "overlapping_pv_sources",
+        "observing_pv_night",
+        "pv_night_transition",
     ]
 
     def __init__(self, entry):
@@ -209,12 +211,15 @@ class SiteStatus(SiteEntity):
                 if stamp is not None
                 else None,
                 "required_for_allocation": role in self.runtime.accounting_keys,
+                "night_assumed_zero_generation": role in self.runtime.night.sleeping,
             }
         result["source_diagnostics"] = diagnostics
         result["unavailable_sources"] = [
             entity_id
             for entity_id, details in diagnostics.items()
-            if not details["valid_numeric_state"] and details["required_for_allocation"]
+            if not details["valid_numeric_state"]
+            and details["required_for_allocation"]
+            and not details["night_assumed_zero_generation"]
         ]
         result["sources_without_recent_report"] = [
             entity_id
@@ -224,6 +229,15 @@ class SiteStatus(SiteEntity):
             and details["required_for_allocation"]
         ]
         result["require_fresh_reports"] = self.runtime.config.get("require_fresh_reports", False)
+        result["pv_night_sleep"] = self.runtime.night.enabled
+        result["sun_state"] = self.runtime._sun_state()
+        result["pv_night_assumed_zero"] = [
+            self.runtime.meters[key] for key in self.runtime.night.sleeping
+        ]
+        result["last_known_pv_counters_kwh"] = {
+            self.runtime.meters[key]: str(value)
+            for key, value in self.runtime.night.last_good.items()
+        }
         from .pv_sources import overlapping_growatt_totals
 
         result["overlapping_pv_sources"] = overlapping_growatt_totals(

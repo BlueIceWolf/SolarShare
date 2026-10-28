@@ -197,3 +197,37 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["step_id"], "site_menu")
         self.assertEqual(flow.site["sources"], old_sources)
         self.assertEqual([item["id"] for item in flow.site["apartments"]], old_ids)
+
+    async def test_restart_with_unavailable_night_pv_and_live_grid(self):
+        flow = await self.configured_flow()
+        config = (await flow.async_step_save())["data"]
+        entry = SimpleNamespace(
+            entry_id="site", data=config | {"site_ledger_initialized": True}, options={}
+        )
+        runtime = SiteRuntime(self.hass, entry)
+        runtime.store = AsyncMock()
+        self.hass.states.async_set("sun.sun", "below_horizon")
+        self.hass.states.async_set("sensor.pv", "unavailable", ATTRS)
+        with patch("custom_components.solarshare.site_runtime.time.time", return_value=10):
+            await runtime._sample()
+        self.assertEqual(runtime.night.sleeping, frozenset({"pv"}))
+        self.assertIsNone(runtime.readings["pv"])
+        self.hass.states.async_set("sensor.import", "100.1", ATTRS)
+        self.hass.states.async_set("sensor.a", "100.1", ATTRS)
+        with patch("custom_components.solarshare.site_runtime.time.time", return_value=70):
+            await runtime._sample()
+        self.assertTrue(runtime.ledger.available)
+        self.assertEqual(runtime.ledger.reason, "observing_pv_night")
+        self.assertEqual(runtime.ledger.totals()["site"]["pv"], 0)
+        self.hass.states.async_set("sun.sun", "above_horizon")
+        with patch("custom_components.solarshare.site_runtime.time.time", return_value=130):
+            await runtime._sample()
+        self.assertFalse(runtime.ledger.available)
+        self.assertFalse(runtime.night.sleeping)
+
+    async def test_restored_sun_is_not_confirmed_night(self):
+        flow = await self.configured_flow()
+        config = (await flow.async_step_save())["data"]
+        runtime = SiteRuntime(self.hass, SimpleNamespace(entry_id="site", data=config, options={}))
+        self.hass.states.async_set("sun.sun", "below_horizon", {"restored": True})
+        self.assertIsNone(runtime._sun_state())

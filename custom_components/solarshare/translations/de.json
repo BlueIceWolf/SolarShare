@@ -87,12 +87,13 @@
       },
       "advanced": {
         "title": "Erweiterte Einstellungen",
-        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet.",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet. Der standardmäßig aktive PV-Nachtmodus benötigt einen gültigen Sonnenstand von sun.sun. Nur bei bestätigter Nacht dürfen fehlende PV-Stände für die Berechnung ohne Ertragszuwachs bleiben. Der Originalzählerstand wird nicht auf 0 gesetzt. Netz- und Batteriewerte werden niemals auf diese Weise ersetzt.",
         "data": {
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
-          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten"
+          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten",
+          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln"
         }
       },
       "site_menu": {
@@ -240,12 +241,13 @@
       },
       "advanced": {
         "title": "Erweiterte Einstellungen",
-        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet.",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet. Der standardmäßig aktive PV-Nachtmodus benötigt einen gültigen Sonnenstand von sun.sun. Nur bei bestätigter Nacht dürfen fehlende PV-Stände für die Berechnung ohne Ertragszuwachs bleiben. Der Originalzählerstand wird nicht auf 0 gesetzt. Netz- und Batteriewerte werden niemals auf diese Weise ersetzt.",
         "data": {
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
-          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten"
+          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten",
+          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln"
         }
       },
       "site_menu": {
@@ -335,7 +337,9 @@
           "storage_error": "Speicherfehler – Berechnung pausiert",
           "stopped": "Angehalten",
           "pv_measurement_boundary_unclear": "AC-PV-Quellen auswählen",
-          "overlapping_pv_sources": "Wechselrichter doppelt zugeordnet"
+          "overlapping_pv_sources": "Wechselrichter doppelt zugeordnet",
+          "observing_pv_night": "Berechnung aktiv – PV-Nachtbetrieb (0 Ertrag angenommen)",
+          "pv_night_transition": "Neue Messbasis für PV-Nacht-/Tagwechsel"
         }
       }
     }
