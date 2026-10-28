@@ -47,14 +47,15 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         flow.hass = self.hass
         self.assertEqual((await flow.async_step_user())["step_id"], "installation")
         self.assertEqual(
-            (await flow.async_step_installation({"name": "Haus"}))["step_id"], "inverters"
+            (await flow.async_step_installation({"name": "Haus"}))["step_id"], "inverter"
         )
         self.assertEqual(
-            (await flow.async_step_inverters({"pv": ["sensor.pv"], "pv_measurement": "ac"}))[
+            (await flow.async_step_inverter({"pv": "sensor.pv", "pv_measurement": "ac"}))[
                 "step_id"
             ],
-            "grid",
+            "inverters",
         )
+        self.assertEqual((await flow.async_step_finish_inverters())["step_id"], "grid")
         self.assertEqual(
             (await flow.async_step_grid({"import": "sensor.import", "export": "sensor.export"}))[
                 "step_id"
@@ -167,7 +168,12 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         flow.hass = self.hass
         await flow.async_step_installation({"name": "Haus"})
         inverters = ["sensor.pv", "sensor.pv2", "sensor.pv3"]
-        result = await flow.async_step_inverters({"pv": inverters, "pv_measurement": "ac"})
+        for inverter in inverters:
+            await flow.async_step_add_inverter()
+            result = await flow.async_step_inverter({"pv": inverter, "pv_measurement": "ac"})
+            self.assertEqual(result["step_id"], "inverters")
+        self.assertEqual(result["description_placeholders"]["count"], "3")
+        result = await flow.async_step_finish_inverters()
         self.assertEqual(result["step_id"], "grid")
         await flow.async_step_grid({"import": "sensor.import", "export": "sensor.export"})
         result = await flow.async_step_battery({"has_battery": True})

@@ -45,11 +45,13 @@
         }
       },
       "inverters": {
-        "title": "2 · Inverters",
-        "description": "Select the cumulative total yield of every inverter. For three inverters, select all three sensors here; their yields are summed automatically. AC total yields need no string counters. Growatt example: Total Power Generation. DC or unknown readings support monitoring only, without AC apartment allocation.",
-        "data": {
-          "pv": "Inverter total-yield sensors",
-          "pv_measurement": "Measurement boundary of selected PV sources"
+        "title": "2 · Inverters ({count} added)",
+        "description": "Assigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
+        "menu_options": {
+          "add_inverter": "Add another inverter",
+          "select_inverter": "Edit / remove inverter",
+          "finish_inverters": "All inverters added – continue",
+          "site_menu": "Edit other settings"
         }
       },
       "grid": {
@@ -113,6 +115,21 @@
           "save": "Save",
           "site_menu": "Edit settings"
         }
+      },
+      "inverter": {
+        "title": "Assign inverter",
+        "description": "Select the total-yield sensor for this inverter, e.g. Growatt Total Power Generation. After confirming, you can add the next inverter. String counters are not needed here.",
+        "data": {
+          "pv": "This inverter's total yield",
+          "pv_measurement": "Measurement boundary",
+          "remove": "Remove this inverter"
+        }
+      },
+      "select_inverter": {
+        "title": "Select inverter",
+        "data": {
+          "inverter_id": "Inverter"
+        }
       }
     },
     "error": {
@@ -125,7 +142,8 @@
       "battery_pair": "Select both battery charge and discharge meters, or neither.",
       "apartment_required": "Add at least one apartment.",
       "missing_sources": "Select PV production, grid import and grid export meters.",
-      "single_site": "An installation already exists. Add apartments in its configuration."
+      "single_site": "An installation already exists. Add apartments in its configuration.",
+      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details."
     },
     "abort": {
       "single_site": "An installation already exists. Add apartments in its configuration."
@@ -178,11 +196,13 @@
         }
       },
       "inverters": {
-        "title": "2 · Inverters",
-        "description": "Select the cumulative total yield of every inverter. For three inverters, select all three sensors here; their yields are summed automatically. AC total yields need no string counters. Growatt example: Total Power Generation. DC or unknown readings support monitoring only, without AC apartment allocation.",
-        "data": {
-          "pv": "Inverter total-yield sensors",
-          "pv_measurement": "Measurement boundary of selected PV sources"
+        "title": "2 · Inverters ({count} added)",
+        "description": "Assigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
+        "menu_options": {
+          "add_inverter": "Add another inverter",
+          "select_inverter": "Edit / remove inverter",
+          "finish_inverters": "All inverters added – continue",
+          "site_menu": "Edit other settings"
         }
       },
       "grid": {
@@ -246,6 +266,21 @@
           "save": "Save",
           "site_menu": "Edit settings"
         }
+      },
+      "inverter": {
+        "title": "Assign inverter",
+        "description": "Select the total-yield sensor for this inverter, e.g. Growatt Total Power Generation. After confirming, you can add the next inverter. String counters are not needed here.",
+        "data": {
+          "pv": "This inverter's total yield",
+          "pv_measurement": "Measurement boundary",
+          "remove": "Remove this inverter"
+        }
+      },
+      "select_inverter": {
+        "title": "Select inverter",
+        "data": {
+          "inverter_id": "Inverter"
+        }
       }
     },
     "error": {
@@ -258,7 +293,8 @@
       "battery_pair": "Select both battery charge and discharge meters, or neither.",
       "apartment_required": "Add at least one apartment.",
       "missing_sources": "Select PV production, grid import and grid export meters.",
-      "single_site": "An installation already exists. Add apartments in its configuration."
+      "single_site": "An installation already exists. Add apartments in its configuration.",
+      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details."
     }
   },
   "selectors": {

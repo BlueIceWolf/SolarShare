@@ -150,22 +150,77 @@ class InstallationWizard:
 
     async def async_step_inverters(self, user_input=None):
         self._ensure_config()
-        errors = self._errors("inverters")
+        values = pv_entities(self.site["sources"].get("pv"))
+        if getattr(self, "step_error", None) and self.step_error[0] == "inverters":
+            self.step_error = ("inverter", self.step_error[1])
+            self.pv_editing = values[0] if values else None
+            return await self.async_step_inverter()
+        if not values:
+            return await self.async_step_add_inverter()
+        return self.async_show_menu(
+            step_id="inverters",
+            description_placeholders={
+                "count": str(len(values)),
+                "inverters": "\n".join(f"- {self._entity_label(item)}" for item in values),
+            },
+            menu_options=["add_inverter", "select_inverter", "finish_inverters", "site_menu"],
+        )
+
+    async def async_step_add_inverter(self, user_input=None):
+        self._ensure_config()
+        self.pv_editing = None
+        return await self.async_step_inverter()
+
+    async def async_step_select_inverter(self, user_input=None):
+        self._ensure_config()
+        values = pv_entities(self.site["sources"].get("pv"))
+        if not values:
+            return await self.async_step_add_inverter()
         if user_input is not None:
-            values = pv_entities(user_input.get("pv"))
-            errors.update(self._meter_errors({"pv": values}))
-            if not values:
+            self.pv_editing = user_input["inverter_id"]
+            return await self.async_step_inverter()
+        return self.async_show_form(
+            step_id="select_inverter",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required("inverter_id"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": item, "label": self._entity_label(item)}
+                                for item in values
+                            ]
+                        )
+                    )
+                }
+            ),
+        )
+
+    async def async_step_inverter(self, user_input=None):
+        self._ensure_config()
+        current = getattr(self, "pv_editing", None)
+        values = pv_entities(self.site["sources"].get("pv"))
+        others = [value for value in values if value != current]
+        errors = self._errors("inverter")
+        if user_input is not None:
+            if current and user_input.get("remove"):
+                self.site["sources"]["pv"] = others
+                self.pv_editing = None
+                return await self.async_step_inverters()
+            meter = user_input.get("pv", "")
+            if not meter:
                 errors["pv"] = "missing_sources"
+            else:
+                errors.update(self._meter_errors({"pv": [*others, meter]}))
+            if others and user_input["pv_measurement"] != self.site["pv_measurement"]:
+                errors["pv_measurement"] = "pv_boundary_mismatch"
             if not errors:
-                self.site["sources"]["pv"] = values
+                self.site["sources"]["pv"] = [*others, meter]
                 self.site["pv_measurement"] = user_input["pv_measurement"]
-                return await self._after_section("grid")
-        defaults = user_input or {
-            "pv": pv_entities(self.site["sources"].get("pv")),
-            "pv_measurement": self.site["pv_measurement"],
-        }
+                self.pv_editing = None
+                return await self.async_step_inverters()
+        defaults = user_input or {"pv": current, "pv_measurement": self.site["pv_measurement"]}
         fields = {}
-        self._meter_field(fields, "pv", pv_entities(defaults.get("pv")), multiple=True)
+        self._meter_field(fields, "pv", defaults.get("pv"))
         fields[probatio.Required("pv_measurement", default=defaults["pv_measurement"])] = (
             selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -173,9 +228,17 @@ class InstallationWizard:
                 )
             )
         )
+        if current:
+            fields[probatio.Optional("remove", default=False)] = bool
         return self.async_show_form(
-            step_id="inverters", data_schema=probatio.Schema(fields), errors=errors
+            step_id="inverter", data_schema=probatio.Schema(fields), errors=errors
         )
+
+    async def async_step_finish_inverters(self, user_input=None):
+        self._ensure_config()
+        if not pv_entities(self.site["sources"].get("pv")):
+            return await self.async_step_add_inverter()
+        return await self._after_section("grid")
 
     async def async_step_grid(self, user_input=None):
         self._ensure_config()

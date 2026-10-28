@@ -45,11 +45,13 @@
         }
       },
       "inverters": {
-        "title": "2 · Wechselrichter",
-        "description": "Wähle den kumulativen Gesamtertrag jedes Wechselrichters. Bei drei Wechselrichtern hier alle drei Sensoren auswählen. Die Erträge werden automatisch addiert. Für AC-Gesamterträge brauchst du keine Stringwerte. Beispiel Growatt: Total Power Generation. DC- oder unklare Werte ermöglichen nur Erfassung, keine AC-Wohnungsverteilung.",
-        "data": {
-          "pv": "Gesamtertrags-Sensoren der Wechselrichter",
-          "pv_measurement": "Messseite der gewählten PV-Quellen"
+        "title": "2 · Wechselrichter ({count} erfasst)",
+        "description": "Bereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
+        "menu_options": {
+          "add_inverter": "Weiteren Wechselrichter hinzufügen",
+          "select_inverter": "Wechselrichter bearbeiten / entfernen",
+          "finish_inverters": "Alle Wechselrichter erfasst – weiter",
+          "site_menu": "Andere Einstellungen ändern"
         }
       },
       "grid": {
@@ -113,6 +115,21 @@
           "save": "Speichern",
           "site_menu": "Einstellungen ändern"
         }
+      },
+      "inverter": {
+        "title": "Wechselrichter zuordnen",
+        "description": "Wähle den Gesamtertrags-Sensor genau dieses Wechselrichters, z. B. Growatt Total Power Generation. Nach dem Bestätigen kannst du den nächsten Wechselrichter hinzufügen. Stringwerte werden hierfür nicht benötigt.",
+        "data": {
+          "pv": "Gesamtertrag dieses Wechselrichters",
+          "pv_measurement": "Messseite",
+          "remove": "Diesen Wechselrichter entfernen"
+        }
+      },
+      "select_inverter": {
+        "title": "Wechselrichter auswählen",
+        "data": {
+          "inverter_id": "Wechselrichter"
+        }
       }
     },
     "error": {
@@ -125,7 +142,8 @@
       "battery_pair": "Batterieladung und -entladung zusammen auswählen oder beide leer lassen.",
       "apartment_required": "Mindestens eine Wohnung hinzufügen.",
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
-      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
+      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
+      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen."
     },
     "abort": {
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
@@ -178,11 +196,13 @@
         }
       },
       "inverters": {
-        "title": "2 · Wechselrichter",
-        "description": "Wähle den kumulativen Gesamtertrag jedes Wechselrichters. Bei drei Wechselrichtern hier alle drei Sensoren auswählen. Die Erträge werden automatisch addiert. Für AC-Gesamterträge brauchst du keine Stringwerte. Beispiel Growatt: Total Power Generation. DC- oder unklare Werte ermöglichen nur Erfassung, keine AC-Wohnungsverteilung.",
-        "data": {
-          "pv": "Gesamtertrags-Sensoren der Wechselrichter",
-          "pv_measurement": "Messseite der gewählten PV-Quellen"
+        "title": "2 · Wechselrichter ({count} erfasst)",
+        "description": "Bereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
+        "menu_options": {
+          "add_inverter": "Weiteren Wechselrichter hinzufügen",
+          "select_inverter": "Wechselrichter bearbeiten / entfernen",
+          "finish_inverters": "Alle Wechselrichter erfasst – weiter",
+          "site_menu": "Andere Einstellungen ändern"
         }
       },
       "grid": {
@@ -246,6 +266,21 @@
           "save": "Speichern",
           "site_menu": "Einstellungen ändern"
         }
+      },
+      "inverter": {
+        "title": "Wechselrichter zuordnen",
+        "description": "Wähle den Gesamtertrags-Sensor genau dieses Wechselrichters, z. B. Growatt Total Power Generation. Nach dem Bestätigen kannst du den nächsten Wechselrichter hinzufügen. Stringwerte werden hierfür nicht benötigt.",
+        "data": {
+          "pv": "Gesamtertrag dieses Wechselrichters",
+          "pv_measurement": "Messseite",
+          "remove": "Diesen Wechselrichter entfernen"
+        }
+      },
+      "select_inverter": {
+        "title": "Wechselrichter auswählen",
+        "data": {
+          "inverter_id": "Wechselrichter"
+        }
       }
     },
     "error": {
@@ -258,7 +293,8 @@
       "battery_pair": "Batterieladung und -entladung zusammen auswählen oder beide leer lassen.",
       "apartment_required": "Mindestens eine Wohnung hinzufügen.",
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
-      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
+      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
+      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen."
     }
   },
   "selectors": {

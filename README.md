@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.2** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.2.3** ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -46,8 +46,10 @@ Anlage verwaltet.
 Die Einrichtung besteht aus sechs klar getrennten Abschnitten:
 
 1. **Anlage:** Name vergeben.
-2. **Wechselrichter:** Die Gesamtertrags-Sensoren aller WR gemeinsam auswählen –
-   bei drei Wechselrichtern also drei Sensoren – und deren Messseite angeben.
+2. **Wechselrichter:** Den Gesamtertrag des ersten WR zuordnen. Danach erscheint
+   eine Liste mit **Weiteren Wechselrichter hinzufügen** und **Alle Wechselrichter
+   erfasst – weiter**. Bei drei WR diesen Schritt dreimal durchlaufen. Vorhandene
+   WR lassen sich einzeln bearbeiten oder entfernen.
 3. **Stromnetz:** Bezugs- und Einspeisezähler am Hausanschluss zuordnen.
 4. **Batterie:** Vorhanden ja/nein. Nur bei Ja erscheinen Lade-/Entladezähler und Kapazität.
 5. **Wohnungen:** Wohnungen mit ihren Verbrauchszählern hinzufügen oder bearbeiten.
@@ -82,7 +84,7 @@ Home-Assistant-Entitäten; Hardware muss über ihre jeweilige Integration eingeb
 
 ## Mehrere Wechselrichter und Stringzähler
 
-Unter **PV-Energiequellen** lassen sich mehrere Sensoren auswählen. SolarShare
+Unter **Wechselrichter** lassen sich mehrere Geräte nacheinander hinzufügen. SolarShare
 zeigt die Einzelzähler und einen gemeinsamen PV-Gesamtzählerstand an und berechnet
 die gesamte PV-Energie aus den einzelnen Zuwächsen. Ein Ausfall oder Reset eines
 einzigen Zählers wird nicht hinter den anderen Quellen versteckt. Dafür sind keine
