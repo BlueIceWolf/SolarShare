@@ -71,7 +71,7 @@ class SiteEntity(SensorEntity):
             name=apartment["name"] if apartment else self.runtime.config["name"],
             manufacturer="SolarShare",
             model="Wohnung" if apartment else "Energieanlage",
-            **({"via_device": (DOMAIN, entry.entry_id)} if apartment else {}),
+            **({"via_device_id": self.runtime.site_device_id} if apartment else {}),
         )
 
     async def async_added_to_hass(self):
