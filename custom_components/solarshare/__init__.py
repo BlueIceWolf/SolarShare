@@ -3,6 +3,9 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
 
 from .runtime import SolarShareRuntime
 from .site_runtime import SiteRuntime
@@ -16,6 +19,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime = SiteRuntime(hass, entry) if "sources" in config else SolarShareRuntime(hass, entry)
     await runtime.async_load()
     entry.runtime_data = runtime
+    if "sources" in config:
+        # Register the parent before adding apartment devices. Home Assistant's
+        # via_device_id expects a registry ID, not an identifier tuple.
+        site_device = dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=config["name"],
+            manufacturer="SolarShare",
+            model="Energieanlage",
+        )
+        runtime.site_device_id = site_device.id
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     runtime.async_start()
     entry.async_on_unload(entry.add_update_listener(async_update_options))
