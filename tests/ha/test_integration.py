@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.config_entries import ConfigEntries
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -45,6 +46,8 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.hass = HomeAssistant(self.temp.name)
         self.hass.config_entries = ConfigEntries(self.hass, {})
+        dr.async_setup(self.hass)
+        await dr.async_load(self.hass)
         await er.async_load(self.hass)
         self.entry = entry()
         self.runtime = SolarShareRuntime(self.hass, self.entry)
@@ -140,6 +143,8 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.hass = HomeAssistant(self.temp.name)
         self.hass.config_entries = ConfigEntries(self.hass, {})
+        dr.async_setup(self.hass)
+        await dr.async_load(self.hass)
         await er.async_load(self.hass)
         self.data = {"name": "Apartment 1", "meter": "sensor.meter", "max_power_kw": 25}
         self.hass.states.async_set("sensor.meter", "100", ATTRS)
