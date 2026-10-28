@@ -56,6 +56,7 @@ class SiteRuntime:
         self.legacy_total = None
         self.readings = {}
         self.reading_times = {}
+        self.source_states = {}
 
     async def async_load(self):
         try:
@@ -121,6 +122,7 @@ class SiteRuntime:
             for key, entity_id in self.meters.items():
                 if entity_id == event.data["entity_id"]:
                     self.readings[key] = None
+                    self.source_states[key] = state.state if state is not None else "missing"
                     affects_accounting |= key in self.accounting_keys
                     if key in self.pv_keys:
                         self.readings["pv"] = None
@@ -158,6 +160,7 @@ class SiteRuntime:
                     self.ledger.review = True
                 self.identities[key] = identity
                 state = self.hass.states.get(entity_id)
+                self.source_states[key] = state.state if state is not None else "missing"
                 readings[key] = None
                 if (
                     state

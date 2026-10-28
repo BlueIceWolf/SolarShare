@@ -203,6 +203,7 @@ class SiteStatus(SiteEntity):
             stamp = self.runtime.reading_times.get(role)
             diagnostics[entity_id] = {
                 "role": role,
+                "source_state": self.runtime.source_states.get(role, "not_sampled"),
                 "valid_numeric_state": self.runtime.readings.get(role) is not None,
                 "last_report_age_seconds": round(max(now - stamp, 0))
                 if stamp is not None

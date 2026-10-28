@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.4** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.2.5** ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -235,3 +235,17 @@ Home Assistant benötigen Linux und Python >=3.14.2:
 python -m pip install -r requirements-test.txt
 python -m unittest discover -s tests/ha -v
 ```
+
+## Diagnose: Benötigter Zähler nicht verfügbar
+
+Beim Datenqualitätssensor unter **Details → Attribute** zeigen `unavailable_sources`
+und `source_diagnostics` die betroffenen Originalentitäten und deren Originalzustand.
+`unknown`, `unavailable`, fehlende oder nur wiederhergestellte Entitäten sind keine
+gültigen Zahlen. Das ist etwas anderes als ein verfügbarer PV-Zähler, dessen kWh-Stand
+nachts einfach stehen bleibt. Netz-/Batteriesensoren müssen ebenfalls gültige Werte
+liefern; ihr Energiefluss wird bei einem Ausfall nicht als null angenommen.
+
+Wenn ein Wechselrichter nachts die Kommunikation abschaltet und auch die Netzwerte
+nicht mehr liefert, kann SolarShare ohne eine unabhängig verfügbare Messquelle keine
+vollständige Gebäudebilanz berechnen. Prüfe die Quellintegration bzw. die ausgewählten
+Zähler. Einstellungen allein können fehlende Messwerte nicht rekonstruieren.

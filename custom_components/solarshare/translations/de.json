@@ -45,8 +45,8 @@
         }
       },
       "inverters": {
-        "title": "2 · Wechselrichter ({count} erfasst)",
-        "description": "Bereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
+        "title": "2 · Wechselrichter",
+        "description": "**{count} Wechselrichter erfasst**\n\nBereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
         "menu_options": {
           "add_inverter": "Weiteren Wechselrichter hinzufügen",
           "select_inverter": "Wechselrichter bearbeiten / entfernen",
@@ -96,8 +96,8 @@
         }
       },
       "site_menu": {
-        "title": "{name} · Einstellungen",
-        "description": "Wähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
+        "title": "SolarShare · Einstellungen",
+        "description": "**Anlage: {name}**\n\nWähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
         "menu_options": {
           "installation": "Anlagenname",
           "inverters": "Wechselrichter",
@@ -198,8 +198,8 @@
         }
       },
       "inverters": {
-        "title": "2 · Wechselrichter ({count} erfasst)",
-        "description": "Bereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
+        "title": "2 · Wechselrichter",
+        "description": "**{count} Wechselrichter erfasst**\n\nBereits zugeordnet:\n{inverters}\n\nSind alle Wechselrichter erfasst oder möchtest du noch einen hinzufügen? Bei drei Wechselrichtern nacheinander alle drei anlegen.",
         "menu_options": {
           "add_inverter": "Weiteren Wechselrichter hinzufügen",
           "select_inverter": "Wechselrichter bearbeiten / entfernen",
@@ -249,8 +249,8 @@
         }
       },
       "site_menu": {
-        "title": "{name} · Einstellungen",
-        "description": "Wähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
+        "title": "SolarShare · Einstellungen",
+        "description": "**Anlage: {name}**\n\nWähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
         "menu_options": {
           "installation": "Anlagenname",
           "inverters": "Wechselrichter",

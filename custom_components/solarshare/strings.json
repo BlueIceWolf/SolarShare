@@ -45,8 +45,8 @@
         }
       },
       "inverters": {
-        "title": "2 · Inverters ({count} added)",
-        "description": "Assigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
+        "title": "2 · Inverters",
+        "description": "**{count} inverters added**\n\nAssigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
         "menu_options": {
           "add_inverter": "Add another inverter",
           "select_inverter": "Edit / remove inverter",
@@ -96,8 +96,8 @@
         }
       },
       "site_menu": {
-        "title": "{name} · Settings",
-        "description": "Choose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
+        "title": "SolarShare · Settings",
+        "description": "**Installation: {name}**\n\nChoose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
         "menu_options": {
           "installation": "Installation name",
           "inverters": "Inverters",
@@ -198,8 +198,8 @@
         }
       },
       "inverters": {
-        "title": "2 · Inverters ({count} added)",
-        "description": "Assigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
+        "title": "2 · Inverters",
+        "description": "**{count} inverters added**\n\nAssigned so far:\n{inverters}\n\nHave you added every inverter, or would you like to add another? Add all three one by one for a three-inverter installation.",
         "menu_options": {
           "add_inverter": "Add another inverter",
           "select_inverter": "Edit / remove inverter",
@@ -249,8 +249,8 @@
         }
       },
       "site_menu": {
-        "title": "{name} · Settings",
-        "description": "Choose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
+        "title": "SolarShare · Settings",
+        "description": "**Installation: {name}**\n\nChoose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
         "menu_options": {
           "installation": "Installation name",
           "inverters": "Inverters",
