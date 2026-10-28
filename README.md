@@ -1,14 +1,47 @@
+<p align="center"><img src="custom_components/solarshare/brand/logo.png" alt="SolarShare" width="500"></p>
+
 # SolarShare
+
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BlueIceWolf&repository=SolarShare&category=integration)
 
 Home Assistant custom integration for monitoring energy consumption per apartment,
 with a foundation for solar energy sharing and future tenant electricity accounting.
 
-**Initial development / v0.1.0:** apartment meter assignment and conservative observed
+**Initial development / v0.1.x:** apartment meter assignment and conservative observed
 consumption are implemented. PV shares, prices, invoices, battery origin tracking and
 live wallbox adapters are not implemented yet. The sensor reports only energy from
 continuously observed intervals, not a complete or billing-certified consumption total.
 
-## Installation
+## Install with HACS
+
+Requires Home Assistant **2026.10 or newer** and an installed/configured HACS.
+
+1. Open the **Open in HACS** button above, or open HACS → three-dot menu →
+   **Custom repositories / Benutzerdefinierte Repositories**.
+2. Add `https://github.com/BlueIceWolf/SolarShare` with category **Integration**.
+3. Search for **SolarShare**, open it and select **Download / Herunterladen**.
+   Without a published release, HACS installs the current default branch (`main`).
+4. **Restart Home Assistant** after installation or updating the integration.
+5. Open **Settings → Devices & services → Add integration → SolarShare**, then
+   configure the apartments as described below.
+
+This is a HACS custom repository, not a listing in the default HACS catalog.
+HACS downloads the complete `custom_components/solarshare/` folder, including the
+bundled icons. No extra icon installation or external brands-repository entry is needed.
+
+### Icons and themes
+
+The integration includes transparent PNG icons at 256/512 px and logos at 800/1600 px,
+with light/dark variants in `custom_components/solarshare/brand/`. Home Assistant
+serves these local brand images automatically. The energy entity also has a
+`mdi:home-lightning-bolt` icon. An editable SVG source is included.
+
+Some older HACS dashboard versions still use the legacy external icon CDN and may
+show a placeholder even though the icon works in Home Assistant. This is a
+[known HACS frontend issue](https://github.com/hacs/integration/issues/5171),
+not a missing asset in this repository. Restart HA after installing the assets.
+
+## Manual installation and apartment setup
 
 Requires Home Assistant **2026.10 or newer**. The real-HA test target is 2026.10.4.
 
@@ -108,7 +141,8 @@ The boundary tests use real Home Assistant objects and mock only disk IO and sel
 config-entry operations. They cover setup/options results, duplicate assignment,
 source metadata, persistence, gap recovery, write failures, pausing/reassignment and
 unload draining. They do not replace a manual test in a running HA frontend.
-GitHub Actions runs both suites and Ruff checks. Changes should add regression cases
+GitHub Actions offers both suites and Ruff/HACS checks for manual runs only;
+pushes and pull requests do not trigger them automatically. Changes should add regression cases
 for accounting behavior, especially missing data and ownership boundaries.
 
 API references used for the integration:

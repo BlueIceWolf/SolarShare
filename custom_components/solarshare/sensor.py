@@ -13,6 +13,7 @@ class ApartmentEnergy(SensorEntity):
     """Stable apartment identity survives renaming and meter replacement."""
 
     _attr_should_poll = False
+    _attr_icon = "mdi:home-lightning-bolt"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR

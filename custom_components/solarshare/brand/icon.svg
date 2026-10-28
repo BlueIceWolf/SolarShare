@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>SolarShare — solar energy shared between homes</title>
+  <g fill="#F4B942" stroke="#F4B942" stroke-width="8" stroke-linecap="round">
+    <circle cx="128" cy="91" r="46" stroke="none"/>
+    <path d="M187 91h11M58 91h11M128 21v11M128 150v11M170 49l8-8M78 141l8-8M170 133l8 8M78 41l8 8"/>
+  </g>
+  <g fill="#108C82">
+    <path d="M26 160l48-42 48 42zM130 160l48-42 48 42z"/>
+    <rect x="34" y="154" width="80" height="70" rx="7"/>
+    <rect x="138" y="154" width="80" height="70" rx="7"/>
+  </g>
+  <g fill="white">
+    <rect x="62" y="179" width="24" height="45" rx="3"/>
+    <rect x="166" y="179" width="24" height="45" rx="3"/>
+  </g>
+  <rect x="109" y="169" width="38" height="10" rx="5" fill="#F4B942"/>
+</svg>

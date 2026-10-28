@@ -1,0 +1,15 @@
+name: HACS validation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate HACS integration layout, manifest and bundled brand assets
+        uses: hacs/action@main
+        with:
+          category: integration
+          # Optional catalog metadata; not required for custom-repository installs.
+          ignore: topics license
