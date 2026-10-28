@@ -10,14 +10,64 @@
           "meter": "Cumulative energy meter",
           "max_power_kw": "Maximum plausible load"
         }
+      },
+      "installation": {
+        "title": "Configure SolarShare installation",
+        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated.",
+        "data": {
+          "name": "Installation name",
+          "pv": "PV production (AC energy meter)",
+          "import": "Grid import (energy meter)",
+          "export": "Grid export (energy meter)",
+          "charge": "Battery charge AC (optional)",
+          "discharge": "Battery discharge AC (optional)",
+          "max_power_kw": "Maximum plausible site load (kW)",
+          "alignment_seconds": "Maximum meter report skew (seconds)",
+          "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
+          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+        }
+      },
+      "apartments": {
+        "title": "Manage apartments",
+        "description": "Apartments: {apartments}. Add more or edit assignments. Save applies the whole installation.",
+        "menu_options": {
+          "add_apartment": "Add apartment",
+          "select_apartment": "Edit / pause / remove apartment",
+          "installation": "Edit building sources",
+          "finish": "Save installation"
+        }
+      },
+      "select_apartment": {
+        "title": "Select apartment",
+        "data": {
+          "apartment_id": "Apartment"
+        }
+      },
+      "apartment": {
+        "title": "Apartment and meter",
+        "description": "Assign the apartment's dedicated meter. All calculated points are created automatically. Editing retains its stable identity. Pausing releases the source; that load remains in the building residual. Removing does not erase stored history.",
+        "data": {
+          "name": "Apartment name",
+          "meter": "Cumulative consumption meter",
+          "paused": "Pause apartment",
+          "remove": "Remove apartment from installation"
+        }
       }
     },
     "error": {
-      "empty_name": "Enter an apartment name.",
+      "empty_name": "Enter a name.",
       "meter_assigned": "This meter is already assigned to another active apartment. Pause that entry first.",
       "recursive_meter": "SolarShare output sensors cannot be used as sources.",
       "not_cumulative": "Choose an energy sensor with state class total or total_increasing.",
-      "unsupported_unit": "Supported units are Wh, kWh and MWh."
+      "unsupported_unit": "Supported units are Wh, kWh and MWh.",
+      "duplicate_meter": "Assign each source only once; pause the previous apartment if needed.",
+      "battery_pair": "Select both battery charge and discharge meters, or neither.",
+      "apartment_required": "Add at least one apartment.",
+      "missing_sources": "Select PV production, grid import and grid export meters.",
+      "single_site": "An installation already exists. Add apartments in its configuration."
+    },
+    "abort": {
+      "single_site": "An installation already exists. Add apartments in its configuration."
     }
   },
   "options": {
@@ -32,15 +82,61 @@
           "paused": "Pause this apartment and release its meter",
           "acknowledge": "I checked the source; clear the review hold and start a new baseline"
         }
+      },
+      "installation": {
+        "title": "Configure SolarShare installation",
+        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated.",
+        "data": {
+          "name": "Installation name",
+          "pv": "PV production (AC energy meter)",
+          "import": "Grid import (energy meter)",
+          "export": "Grid export (energy meter)",
+          "charge": "Battery charge AC (optional)",
+          "discharge": "Battery discharge AC (optional)",
+          "max_power_kw": "Maximum plausible site load (kW)",
+          "alignment_seconds": "Maximum meter report skew (seconds)",
+          "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
+          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+        }
+      },
+      "apartments": {
+        "title": "Manage apartments",
+        "description": "Apartments: {apartments}. Add more or edit assignments. Save applies the whole installation.",
+        "menu_options": {
+          "add_apartment": "Add apartment",
+          "select_apartment": "Edit / pause / remove apartment",
+          "installation": "Edit building sources",
+          "finish": "Save installation"
+        }
+      },
+      "select_apartment": {
+        "title": "Select apartment",
+        "data": {
+          "apartment_id": "Apartment"
+        }
+      },
+      "apartment": {
+        "title": "Apartment and meter",
+        "description": "Assign the apartment's dedicated meter. All calculated points are created automatically. Editing retains its stable identity. Pausing releases the source; that load remains in the building residual. Removing does not erase stored history.",
+        "data": {
+          "name": "Apartment name",
+          "meter": "Cumulative consumption meter",
+          "paused": "Pause apartment",
+          "remove": "Remove apartment from installation"
+        }
       }
     },
     "error": {
-      "empty_name": "Enter an apartment name.",
+      "empty_name": "Enter a name.",
       "meter_assigned": "This meter is already assigned to another active apartment. Pause that entry first.",
       "recursive_meter": "SolarShare output sensors cannot be used as sources.",
       "not_cumulative": "Choose an energy sensor with state class total or total_increasing.",
-      "unsupported_unit": "Supported units are Wh, kWh and MWh."
+      "unsupported_unit": "Supported units are Wh, kWh and MWh.",
+      "duplicate_meter": "Assign each source only once; pause the previous apartment if needed.",
+      "battery_pair": "Select both battery charge and discharge meters, or neither.",
+      "apartment_required": "Add at least one apartment.",
+      "missing_sources": "Select PV production, grid import and grid export meters.",
+      "single_site": "An installation already exists. Add apartments in its configuration."
     }
   }
 }
-

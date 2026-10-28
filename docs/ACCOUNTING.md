@@ -1,5 +1,16 @@
 # Accounting architecture and roadmap
 
+## Version 0.2 implementation
+
+The integration is now a central installation hub: one building source map, an
+editable apartment list, automatic apartment devices, period counters, proportional
+PV/grid allocation, self-sufficiency and a virtual battery-origin model. The current
+rules, uncertainty treatment and supported measurement topology are documented in
+the [README](../README.md). The following phases describe the original roadmap;
+the immutable interval journal, SOC reconciliation and financial reporting remain
+future work. Current source alignment is a bounded common sampling frame, not an
+interpolated or billing-certified synchronized meter reading.
+
 ## Delivered in 0.1
 
 One config entry and monotonic observed-energy ledger per apartment. Assignment

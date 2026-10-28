@@ -10,14 +10,64 @@
           "meter": "Kumulativer Energiezähler",
           "max_power_kw": "Maximale plausible Leistung"
         }
+      },
+      "installation": {
+        "title": "SolarShare-Anlage einrichten",
+        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt.",
+        "data": {
+          "name": "Name der Anlage",
+          "pv": "PV-Erzeugung (AC-Energiezähler)",
+          "import": "Netzbezug (Energiezähler)",
+          "export": "Einspeisung (Energiezähler)",
+          "charge": "Batterieladung AC (optional)",
+          "discharge": "Batterieentladung AC (optional)",
+          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
+          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
+          "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+        }
+      },
+      "apartments": {
+        "title": "Wohnungen verwalten",
+        "description": "Wohnungen: {apartments}. Weitere hinzufügen oder Zuordnungen bearbeiten. Erst Speichern übernimmt die gesamte Anlage.",
+        "menu_options": {
+          "add_apartment": "Wohnung hinzufügen",
+          "select_apartment": "Wohnung bearbeiten / pausieren / entfernen",
+          "installation": "Anlagenzähler bearbeiten",
+          "finish": "Anlage speichern"
+        }
+      },
+      "select_apartment": {
+        "title": "Wohnung auswählen",
+        "data": {
+          "apartment_id": "Wohnung"
+        }
+      },
+      "apartment": {
+        "title": "Wohnung und Zähler",
+        "description": "Eindeutigen Wohnungszähler zuordnen. Die Wohnung erhält automatisch alle berechneten Datenpunkte. Beim Wechsel bleibt die Wohnungs-ID erhalten. Pausierte Wohnungen geben ihren Zähler frei und zählen zum verbleibenden Gebäudeverbrauch. Entfernen löscht keine gespeicherte Historie.",
+        "data": {
+          "name": "Name der Wohnung",
+          "meter": "Kumulativer Verbrauchszähler",
+          "paused": "Wohnung pausieren",
+          "remove": "Wohnung aus der Anlage entfernen"
+        }
       }
     },
     "error": {
-      "empty_name": "Bitte einen Namen für die Wohnung eingeben.",
+      "empty_name": "Bitte einen Namen eingeben.",
       "meter_assigned": "Dieser Zähler ist bereits einer aktiven Wohnung zugeordnet. Den bisherigen Eintrag zuerst pausieren.",
       "recursive_meter": "SolarShare-Ausgabesensoren können nicht als Quelle verwendet werden.",
       "not_cumulative": "Einen Energiesensor mit Zustandsklasse total oder total_increasing auswählen.",
-      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh."
+      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh.",
+      "duplicate_meter": "Jeden Zähler nur einmal zuordnen. Die bisherige Wohnung ggf. pausieren.",
+      "battery_pair": "Batterieladung und -entladung zusammen auswählen oder beide leer lassen.",
+      "apartment_required": "Mindestens eine Wohnung hinzufügen.",
+      "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
+      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
+    },
+    "abort": {
+      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
     }
   },
   "options": {
@@ -32,15 +82,61 @@
           "paused": "Wohnung pausieren und Zähler freigeben",
           "acknowledge": "Quelle geprüft: Prüfsperre aufheben und neue Messbasis setzen"
         }
+      },
+      "installation": {
+        "title": "SolarShare-Anlage einrichten",
+        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt.",
+        "data": {
+          "name": "Name der Anlage",
+          "pv": "PV-Erzeugung (AC-Energiezähler)",
+          "import": "Netzbezug (Energiezähler)",
+          "export": "Einspeisung (Energiezähler)",
+          "charge": "Batterieladung AC (optional)",
+          "discharge": "Batterieentladung AC (optional)",
+          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
+          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
+          "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+        }
+      },
+      "apartments": {
+        "title": "Wohnungen verwalten",
+        "description": "Wohnungen: {apartments}. Weitere hinzufügen oder Zuordnungen bearbeiten. Erst Speichern übernimmt die gesamte Anlage.",
+        "menu_options": {
+          "add_apartment": "Wohnung hinzufügen",
+          "select_apartment": "Wohnung bearbeiten / pausieren / entfernen",
+          "installation": "Anlagenzähler bearbeiten",
+          "finish": "Anlage speichern"
+        }
+      },
+      "select_apartment": {
+        "title": "Wohnung auswählen",
+        "data": {
+          "apartment_id": "Wohnung"
+        }
+      },
+      "apartment": {
+        "title": "Wohnung und Zähler",
+        "description": "Eindeutigen Wohnungszähler zuordnen. Die Wohnung erhält automatisch alle berechneten Datenpunkte. Beim Wechsel bleibt die Wohnungs-ID erhalten. Pausierte Wohnungen geben ihren Zähler frei und zählen zum verbleibenden Gebäudeverbrauch. Entfernen löscht keine gespeicherte Historie.",
+        "data": {
+          "name": "Name der Wohnung",
+          "meter": "Kumulativer Verbrauchszähler",
+          "paused": "Wohnung pausieren",
+          "remove": "Wohnung aus der Anlage entfernen"
+        }
       }
     },
     "error": {
-      "empty_name": "Bitte einen Namen für die Wohnung eingeben.",
+      "empty_name": "Bitte einen Namen eingeben.",
       "meter_assigned": "Dieser Zähler ist bereits einer aktiven Wohnung zugeordnet. Den bisherigen Eintrag zuerst pausieren.",
       "recursive_meter": "SolarShare-Ausgabesensoren können nicht als Quelle verwendet werden.",
       "not_cumulative": "Einen Energiesensor mit Zustandsklasse total oder total_increasing auswählen.",
-      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh."
+      "unsupported_unit": "Unterstützte Einheiten: Wh, kWh und MWh.",
+      "duplicate_meter": "Jeden Zähler nur einmal zuordnen. Die bisherige Wohnung ggf. pausieren.",
+      "battery_pair": "Batterieladung und -entladung zusammen auswählen oder beide leer lassen.",
+      "apartment_required": "Mindestens eine Wohnung hinzufügen.",
+      "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
+      "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
     }
   }
 }
-

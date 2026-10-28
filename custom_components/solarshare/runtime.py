@@ -29,7 +29,7 @@ class SolarShareRuntime:
         self.options = dict(entry.options)
         self.meter = self.config[CONF_METER]
         self.signal = f"{DOMAIN}_{entry.entry_id}"
-        self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
+        self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}", atomic_writes=True)
         self.ledger = Ledger()
         self.lock = asyncio.Lock()
         self.tasks = set()
@@ -42,7 +42,7 @@ class SolarShareRuntime:
         """Fail closed if storage is unreadable; never silently replace totals."""
         try:
             data = await self.store.async_load()
-            if data is None and self.entry.data.get("ledger_initialized"):
+            if not data and self.entry.data.get("ledger_initialized"):
                 raise ValueError("Previously initialized ledger is missing or corrupt")
             self.ledger = Ledger.restore(data and data["ledger"], self.config[CONF_MAX_POWER])
             if data:

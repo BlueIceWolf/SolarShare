@@ -4,148 +4,163 @@
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BlueIceWolf&repository=SolarShare&category=integration)
 
-Home Assistant custom integration for monitoring energy consumption per apartment,
-with a foundation for solar energy sharing and future tenant electricity accounting.
+**Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
+SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
+für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
+Intervallen auf die Wohnungen verteilt. Version **0.2.0** ersetzt die frühere
+Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
-**Initial development / v0.1.x:** apartment meter assignment and conservative observed
-consumption are implemented. PV shares, prices, invoices, battery origin tracking and
-live wallbox adapters are not implemented yet. The sensor reports only energy from
-continuously observed intervals, not a complete or billing-certified consumption total.
+## HACS installieren / aktualisieren
 
-## Install with HACS
+Home Assistant 2026.10 oder neuer erforderlich.
 
-Requires Home Assistant **2026.10 or newer** and an installed/configured HACS.
+1. In HACS `https://github.com/BlueIceWolf/SolarShare` als benutzerdefiniertes
+   Repository vom Typ **Integration** hinzufügen (oder den Button oben verwenden).
+2. SolarShare herunterladen. Bei einer vorhandenen Installation **Erneut herunterladen**
+   und `main` auswählen, falls HACS noch keinen neuen Stand anzeigt.
+3. Home Assistant vollständig neu starten.
+4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → SolarShare**.
 
-1. Open the **Open in HACS** button above, or open HACS → three-dot menu →
-   **Custom repositories / Benutzerdefinierte Repositories**.
-2. Add `https://github.com/BlueIceWolf/SolarShare` with category **Integration**.
-3. Search for **SolarShare**, open it and select **Download / Herunterladen**.
-   Without a published release, HACS installs the current default branch (`main`).
-4. **Restart Home Assistant** after installation or updating the integration.
-5. Open **Settings → Devices & services → Add integration → SolarShare**, then
-   configure the apartments as described below.
+Das Repository ist über HACS als benutzerdefiniertes Repository installierbar;
+es ist nicht im Standardkatalog gelistet. Icons und Logos für helle/dunkle Ansichten
+sind im `brand/`-Ordner enthalten. Einige ältere HACS-Oberflächen zeigen wegen eines
+[bekannten Fehlers](https://github.com/hacs/integration/issues/5171) noch einen
+Platzhalter; Home Assistant nutzt die lokalen Icons.
 
-This is a HACS custom repository, not a listing in the default HACS catalog.
-HACS downloads the complete `custom_components/solarshare/` folder, including the
-bundled icons. No extra icon installation or external brands-repository entry is needed.
+## Bestehenden v0.1-Eintrag umstellen
 
-### Icons and themes
+**Den vorhandenen Eintrag nicht löschen.** Nach dem Update bei SolarShare
+**Konfigurieren** öffnen. Jetzt die Anlagenquellen auswählen; die bisherige Wohnung
+ist bereits vorbelegt. Weitere Wohnungen hinzufügen, dann **Anlage speichern**.
+Der frühere Verbrauchsstand bleibt unter seiner bisherigen Sensor-ID als Archiv
+erhalten. Er wird nicht nachträglich mit erfundenen PV-/Netzanteilen versehen.
+Die neue gemeinsame Berechnung startet mit frischen Messbasen.
 
-The integration includes transparent PNG icons at 256/512 px and logos at 800/1600 px,
-with light/dark variants in `custom_components/solarshare/brand/`. Home Assistant
-serves these local brand images automatically. The energy entity also has a
-`mdi:home-lightning-bolt` icon. An editable SVG source is included.
+Falls mehrere alte Einzelzähler-Einträge existieren: einen zur Anlage umstellen,
+die anderen Wohnungen dort hinzufügen und die übrigen alten Einträge deaktivieren.
+Ihre Historie bleibt erhalten. Neue Wohnungen werden nur innerhalb der einen
+Anlage verwaltet.
 
-Some older HACS dashboard versions still use the legacy external icon CDN and may
-show a placeholder even though the icon works in Home Assistant. This is a
-[known HACS frontend issue](https://github.com/hacs/integration/issues/5171),
-not a missing asset in this repository. Restart HA after installing the assets.
+## Quellen und Wohnungen einrichten
 
-## Manual installation and apartment setup
+Einmal für das gesamte Gebäude auswählen:
 
-Requires Home Assistant **2026.10 or newer**. The real-HA test target is 2026.10.4.
+- kumulative **PV-Erzeugung AC**, **Netzbezug**, **Einspeisung**;
+- optional **Batterieladung AC und Batterieentladung AC** als getrenntes Paar;
+- bei Batterie die nutzbare Kapazität in kWh;
+- maximale plausible Anlagenleistung und erlaubten Zeitversatz der Zählerberichte.
 
-1. Copy `custom_components/solarshare` into your Home Assistant
-   `config/custom_components/solarshare` directory and restart Home Assistant.
-   Alternatively add this repository as a HACS **custom repository / Integration**
-   and install it. This project is not in the default HACS catalog.
-2. Open **Settings → Devices & services → Add integration → SolarShare**.
-3. Enter an apartment name and select its cumulative energy sensor. Sources must
-   have device class `energy`, state class `total` or `total_increasing`, and units
-   `Wh`, `kWh` or `MWh`. Power (`W`/`kW`) and daily-reset meters are unsuitable.
-4. Set the maximum plausible load for that apartment in kW (default 25 kW).
-   This bounds acceptable increments; allow headroom for the real installation.
-5. Repeat **Add integration** for each additional apartment. One active assignment
-   per source meter is allowed. Setup also accepts temporarily unavailable sources;
-   observation starts when valid data arrives.
+Danach **Wohnung hinzufügen** wiederholen: Name und zugehörigen Verbrauchszähler
+auswählen. Unter **Wohnung bearbeiten** lassen sich Name, Zähler, Pause und Zuordnung
+später ändern. Erst **Anlage speichern** übernimmt alle Änderungen. Die Wohnungs-ID
+und bereits erfassten Werte bleiben beim Bearbeiten erhalten. Einen Zähler zum
+Umziehen zuerst in seiner alten Wohnung pausieren.
 
-English and German setup/options texts are included.
+Quellen müssen Gerätekategorie `energy`, Zustandsklasse `total` oder
+`total_increasing` und Einheit Wh/kWh/MWh haben. Keine täglich zurückgesetzten
+Zähler, Leistungssensoren oder SolarShare-Ausgabesensoren auswählen. Alle Werte
+müssen dieselbe AC-Bilanzgrenze abbilden. Die Integration liest die ausgewählten
+Home-Assistant-Entitäten; Hardware muss über ihre jeweilige Integration eingebunden sein.
 
-## Edit, replace or reassign meters
+## Automatisch angelegte Datenpunkte
 
-Open **Configure** on the apartment's integration entry. Change the name, source or
-maximum load. The apartment's stable sensor identity and previously observed total
-remain. Every reload starts a new baseline; no difference across the edit is added.
+SolarShare erscheint als **Integration mit einem Anlagengerät und einem Gerät pro
+Wohnung**, nicht als Sammlung einzeln anzulegender Helfer.
 
-To move a meter from apartment A to B, first **pause A**, then select that meter in
-B's configuration. A retains its historical total and releases the meter. Assign
-a different meter to A before resuming it. There is no retroactive ownership change.
-Pausing is also useful during maintenance or tenant changes.
+| Je Wohnung | Zeiträume |
+| --- | --- |
+| Verbrauch (kWh) | Heute, Monat, Jahr, Gesamt |
+| Zugeordnete Solarenergie inkl. bekanntem PV-Speicheranteil (kWh) | Heute, Monat, Jahr, Gesamt |
+| Direkter PV-Anteil (kWh) | Heute, Monat, Jahr, Gesamt |
+| Netzenergie inkl. bekanntem netzgeladenem Speicheranteil (kWh) | Heute, Monat, Jahr, Gesamt |
+| Versorgung aus der Batterie (kWh) | Heute, Monat, Jahr, Gesamt |
+| Energie mit ungeklärter Herkunft (kWh) | Heute, Monat, Jahr, Gesamt |
+| Autarkie (%) | Heute, Monat, Jahr, Gesamt |
+| Quellzählerstand (kWh), mittlere Leistung des letzten Intervalls (W) | Aktueller Messstand / Intervall |
 
-A meter reset, implausible jump or entity-registry source identity replacement
-holds the sensor unavailable with `review_required: true`. Check the source,
-correct the maximum load if necessary, then use **I checked the source** in Configure.
-This retains the total, clears the hold and starts a new baseline. It does not add
-the skipped energy. A transient zero followed by an old high value cannot silently
-release this hold.
+Die Batterieenergie ist eine zusätzliche Aufschlüsselung und darf nicht nochmals
+zum Verbrauch addiert werden. Für die Herkunft gilt:
+**Verbrauch = Solarenergie + Netzenergie + ungeklärte Energie**.
 
-## What the sensor means
+Am Anlagengerät entstehen PV-Erzeugung, Netzbezug, Einspeisung, Batterieladung und
+-entladung (wenn konfiguriert), Gebäudeverbrauch, verbleibender Allgemeinverbrauch
+inkl. Messdifferenzen und PV-Eigenverbrauchsquote, jeweils für die vier Zeiträume.
+Zusätzlich gibt es Quellzählerstände und einen Datenqualitätssensor.
 
-Each apartment exposes **SolarShare <name> observed energy** in kWh. The first valid
-reading establishes a baseline; it is not consumption. Consecutive valid increments
-are accumulated with decimal arithmetic and saved before a state update is published.
-The sensor uses `total_increasing` for Home Assistant statistics, but gaps make it an
-incomplete observed total. Do not use it as an invoice amount.
+## Berechnung und Grenzen
 
-- `unknown`, `unavailable`, missing entities, invalid numbers, restored startup states
-  and incompatible metadata make the output unavailable; they never become zero.
-- After a gap or restart, the next valid reading establishes a new baseline.
-  Energy during the missing interval is deliberately omitted, even if the physical
-  meter has a cumulative reading. Its time and ownership were not observed.
-- No source change event for five minutes breaks continuity. A timer detects silent
-  sources within a further 30 seconds. The next event after a long gap also rebaselines.
-  Even a live but infrequently updating meter may therefore omit intervals. Choose
-  a source reporting more frequently than five minutes. Unchanged values are not
-  treated as proof of freshness by this initial implementation.
-- Decreasing readings and jumps larger than maximum load × elapsed time plus a
-  0.05 kWh quantization allowance require review. Small erroneous source values
-  within this tolerance cannot be distinguished from real consumption.
-- `gap_count`, `status`, `review_required`, `source_entity` and
-  `last_observed_total_kwh` explain the state. Gap count is a continuity-break count,
-  including restarts, not an audit log or a measured amount of missing energy.
+Alle 60 Sekunden wird ein gemeinsamer Messrahmen geprüft. Alle Quellen müssen
+seit dem vorherigen Rahmen erneut berichtet haben, höchstens fünf Minuten alt sein
+und innerhalb des konfigurierten Zeitversatzes liegen (Standard 60 Sekunden).
+Auch unveränderte, neu gemeldete Zählerstände zählen über `last_reported` als Bericht.
+Die Werte sind eine zeitlich begrenzte **Intervallzuordnung**, keine physische
+Messung des Stromursprungs jeder Wohnung.
 
-Totals and review holds live in `.storage/solarshare.<entry_id>`. Baselines are never
-restored across restarts. A missing previously initialized ledger or read error
-blocks setup instead of creating a fresh zero. A write failure stops observation
-and marks the output unavailable; reload after fixing storage. An abrupt shutdown
-can lose the latest uncommitted update, but it will not be replayed or double counted.
-Keep regular Home Assistant backups of both config entries and integration storage.
-Removing an entry does not delete its ledger file; archive it before manual cleanup.
-Re-adding a deleted apartment creates a new identity and a new total.
+Ohne Speicher gilt pro Intervall:
 
-## Roadmap and design
-
-See [accounting architecture](docs/ACCOUNTING.md) for interval alignment, PV/grid/
-battery conservation and data quality requirements. See [wallbox design](docs/WALLBOX.md)
-for RFID/card mapping, session ownership, meter boundaries and recovery behavior.
-
-The MVP intentionally has no automatic tariff calculation, backfilling, source
-origin claims or charger control. These need an auditable interval/session ledger.
-
-## Development and tests
-
-Offline ledger regression suite, Python 3.12+ and no third-party dependencies:
-
-```sh
-python -m unittest discover -s tests -p test_accounting.py -v
+```text
+Gebäudeverbrauch = PV + Netzbezug - Einspeisung
+PV vor Ort = PV - Einspeisung
+Solarenergie Wohnung = PV vor Ort × (Wohnungsverbrauch / Gebäudeverbrauch)
+Netzenergie Wohnung = Netzbezug × (Wohnungsverbrauch / Gebäudeverbrauch)
+Autarkie Wohnung = Solarenergie Wohnung / Wohnungsverbrauch × 100
+PV-Eigenverbrauchsquote Anlage = (PV - Einspeisung) / PV × 100
 ```
 
-Real Home Assistant boundary tests, Linux and Python >=3.14.2:
+Beispiel: 0,4 kWh PV plus 0,6 kWh Netz versorgen 1 kWh Gebäudeverbrauch. Eine Wohnung
+mit 0,3 kWh erhält 0,12 kWh PV und 0,18 kWh Netz, also 40 % Autarkie.
+Nicht zugeordneter Gebäudeverbrauch bleibt als Allgemeinverbrauch/Messdifferenz
+sichtbar und nimmt an derselben proportionalen Verteilung teil.
+
+Mit Speicher wird die AC-Bilanz um Entladung minus Ladung ergänzt. Die deklarierte
+Zuordnung priorisiert PV für direkte Lasten, danach Batterieladung. Die virtuelle
+Batterie führt PV-, Netz- und unbekannte Herkunft mit proportionaler Entnahme und
+angenommenen 95 % Lade-/Entladewirkungsgraden. Diese Herkunft ist modelliert.
+Nach Start oder Datenlücke beginnt der Speicherinhalt konservativ als unbekannt;
+die Kapazität ist eine obere Anfangsgrenze. Ladung kann diese anfängliche
+Unsicherheit verdrängen. Ein späterer SOC-Abgleich ist noch nicht enthalten.
+
+**Bei unbekannter Batterieherkunft wird keine scheinbar exakte Autarkie angezeigt.**
+Die kWh unbekannter Herkunft bleiben sichtbar. Bei null Verbrauch ist die Quote
+ebenfalls nicht definiert. Gleichzeitig gemessener Bezug/Einspeisung oder
+Ladung/Entladung, Batterieexport unklarer Herkunft und unplausible Energiebilanzen
+werden nicht automatisch aufgeteilt. Dafür ist feinere Messtechnik bzw. ein
+erweitertes Modell nötig.
+
+## Datenlücken, Neustarts und Speicherung
+
+Fehlende, nicht verfügbare, wiederhergestellte, veraltete oder zeitlich unpassende
+Quellen führen zu `unavailable`, niemals zu erfundenen Nullen. Ein neuer kompletter
+Messrahmen setzt erst eine Basis; nur der folgende vollständige Rahmen liefert
+Energie. Fehlende Intervalle werden nicht nachgetragen. Tagesgrenzen starten eine
+neue Basis, damit ein Intervall über Mitternacht nicht falsch einem Tag zugeordnet wird.
+Tages-/Monats-/Jahreswerte umfassen nur seit Einrichtung beobachtete Daten; sie
+importieren keine frühere Recorder-Historie.
+
+Resets oder unplausible Sprünge sperren die Berechnung bis zur Prüfung und
+Bestätigung in der Konfiguration. Speicherung erfolgt atomar vor Veröffentlichung.
+Bei Schreibfehlern stoppt die Berechnung; bei fehlendem zuvor initialisiertem
+Speicher wird kein neuer Nullstand angelegt. Sichern:
+`.storage/solarshare.site.<entry_id>` sowie vorhandene alte
+`.storage/solarshare.<entry_id>` und die HA-Konfiguration.
+
+Die Integration berechnet keine rechtssicheren Rechnungen. Live-RFID-Ladesitzungen,
+Tarife, SOC-Abgleich und ein dauerhaftes Intervall-Auditjournal bleiben separate
+Ausbauschritte: [Wallbox-Konzept](docs/WALLBOX.md), [Architektur](docs/ACCOUNTING.md).
+
+## Entwicklung
+
+Die ursprüngliche Dokumentation ist unter [v0.1-Archiv](docs/LEGACY_0_1.md) erhalten.
+Rechentests lokal ohne externe Abhängigkeiten:
+
+```sh
+python -m unittest discover -s tests -p 'test_*accounting.py' -v
+```
+
+GitHub-Prüfungen starten ausschließlich manuell. Die Tests gegen echtes
+Home Assistant benötigen Linux und Python >=3.14.2:
 
 ```sh
 python -m pip install -r requirements-test.txt
 python -m unittest discover -s tests/ha -v
 ```
-
-The boundary tests use real Home Assistant objects and mock only disk IO and selected
-config-entry operations. They cover setup/options results, duplicate assignment,
-source metadata, persistence, gap recovery, write failures, pausing/reassignment and
-unload draining. They do not replace a manual test in a running HA frontend.
-GitHub Actions offers both suites and Ruff/HACS checks for manual runs only;
-pushes and pull requests do not trigger them automatically. Changes should add regression cases
-for accounting behavior, especially missing data and ownership boundaries.
-
-API references used for the integration:
-[config flows](https://contributors.home-assistant.io/core/integrations/config-flow/),
-[options flows](https://contributors.home-assistant.io/core/integrations/options-flow/),
-[sensor entities](https://contributors.home-assistant.io/core/entities/sensor/).

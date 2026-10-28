@@ -6,7 +6,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    async_add_entities([ApartmentEnergy(entry)])
+    if "sources" in entry.runtime_data.config:
+        from .site_sensor import entities
+
+        async_add_entities(entities(entry))
+    else:
+        async_add_entities([ApartmentEnergy(entry)])
 
 
 class ApartmentEnergy(SensorEntity):

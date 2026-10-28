@@ -13,11 +13,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from custom_components.solarshare.config_flow import (
-    SolarShareConfigFlow,
-    SolarShareOptionsFlow,
-    validate,
-)
+from custom_components.solarshare.legacy_flow import LegacyConfigFlow as SolarShareConfigFlow
+from custom_components.solarshare.legacy_flow import LegacyOptionsFlow as SolarShareOptionsFlow
+from custom_components.solarshare.legacy_flow import validate
 from custom_components.solarshare.runtime import SolarShareRuntime
 from custom_components.solarshare.sensor import ApartmentEnergy
 
