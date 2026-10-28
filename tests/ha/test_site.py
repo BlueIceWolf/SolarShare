@@ -46,7 +46,24 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         flow = SolarShareConfigFlow()
         flow.hass = self.hass
         self.assertEqual((await flow.async_step_user())["step_id"], "installation")
-        self.assertEqual((await flow.async_step_installation(self.settings))["type"], "menu")
+        self.assertEqual(
+            (await flow.async_step_installation({"name": "Haus"}))["step_id"], "inverters"
+        )
+        self.assertEqual(
+            (await flow.async_step_inverters({"pv": ["sensor.pv"], "pv_measurement": "ac"}))[
+                "step_id"
+            ],
+            "grid",
+        )
+        self.assertEqual(
+            (await flow.async_step_grid({"import": "sensor.import", "export": "sensor.export"}))[
+                "step_id"
+            ],
+            "battery",
+        )
+        self.assertEqual(
+            (await flow.async_step_battery({"has_battery": False}))["step_id"], "apartments"
+        )
         for apartment in ("a", "b"):
             await flow.async_step_add_apartment()
             await flow.async_step_apartment({"name": apartment, "meter": f"sensor.{apartment}"})
@@ -54,7 +71,10 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_setup_creates_one_installation_with_two_apartments(self):
         flow = await self.configured_flow()
-        result = await flow.async_step_finish()
+        review = await flow.async_step_finish()
+        self.assertEqual(review["type"], "menu")
+        self.assertIn("save", review["menu_options"])
+        result = await flow.async_step_save()
         self.assertEqual(result["type"], "create_entry")
         self.assertEqual(len(result["data"]["apartments"]), 2)
         self.assertEqual(result["data"]["sources"]["pv"], ["sensor.pv"])
@@ -64,7 +84,9 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         await flow.async_step_add_apartment()
         result = await flow.async_step_apartment({"name": "duplicate", "meter": "sensor.a"})
         self.assertEqual(result["errors"], {"meter": "duplicate_meter"})
-        result = await flow.async_step_installation(self.settings | {"charge": "sensor.a"})
+        result = await flow.async_step_battery_meters(
+            {"charge": "sensor.charge", "battery_capacity": 10}
+        )
         self.assertEqual(result["errors"]["base"], "battery_pair")
 
     async def test_options_conversion_retains_old_apartment_identity(self):
@@ -83,7 +105,7 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_devices_points_and_apartment_autarky(self):
         flow = await self.configured_flow()
-        config = (await flow.async_step_finish())["data"]
+        config = (await flow.async_step_save())["data"]
         entry = SimpleNamespace(
             entry_id="site", data=config | {"site_ledger_initialized": True}, options={}
         )
@@ -127,7 +149,7 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_monitoring_string_does_not_join_building_balance(self):
         flow = await self.configured_flow()
-        config = (await flow.async_step_finish())["data"]
+        config = (await flow.async_step_save())["data"]
         config["pv_details"] = ["sensor.string2"]
         entry = SimpleNamespace(entry_id="site", data=config, options={})
         runtime = SiteRuntime(self.hass, entry)
@@ -139,3 +161,33 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         runtime.ledger.available = True
         runtime._changed(SimpleNamespace(data={"entity_id": "sensor.string2", "new_state": None}))
         self.assertTrue(runtime.ledger.available)
+
+    async def test_three_inverters_and_battery_branch(self):
+        flow = SolarShareConfigFlow()
+        flow.hass = self.hass
+        await flow.async_step_installation({"name": "Haus"})
+        inverters = ["sensor.pv", "sensor.pv2", "sensor.pv3"]
+        result = await flow.async_step_inverters({"pv": inverters, "pv_measurement": "ac"})
+        self.assertEqual(result["step_id"], "grid")
+        await flow.async_step_grid({"import": "sensor.import", "export": "sensor.export"})
+        result = await flow.async_step_battery({"has_battery": True})
+        self.assertEqual(result["step_id"], "battery_meters")
+        result = await flow.async_step_battery_meters(
+            {"charge": "sensor.charge", "discharge": "sensor.discharge", "battery_capacity": 10}
+        )
+        self.assertEqual(result["step_id"], "apartments")
+        await flow.async_step_add_apartment()
+        await flow.async_step_apartment({"name": "Wohnung", "meter": "sensor.a"})
+        result = await flow.async_step_finish()
+        self.assertEqual(result["description_placeholders"]["pv_count"], "3")
+        self.assertEqual(flow.site["pv_details"], [])
+
+    async def test_edit_section_preserves_other_assignments(self):
+        flow = await self.configured_flow()
+        old_sources = dict(flow.site["sources"])
+        old_ids = [item["id"] for item in flow.site["apartments"]]
+        await flow.async_step_site_menu()
+        result = await flow.async_step_installation({"name": "Neuer Name"})
+        self.assertEqual(result["step_id"], "site_menu")
+        self.assertEqual(flow.site["sources"], old_sources)
+        self.assertEqual([item["id"] for item in flow.site["apartments"]], old_ids)

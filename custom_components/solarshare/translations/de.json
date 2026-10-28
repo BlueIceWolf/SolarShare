@@ -12,31 +12,20 @@
         }
       },
       "installation": {
-        "title": "SolarShare-Anlage einrichten",
-        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt. Mehrere unabhängige Wechselrichter-Ausgänge werden intern addiert. Niemals WR-Gesamtwert und dessen String-/Teilwerte gemeinsam auswählen. DC- oder unklare Quellen werden nur erfasst; eine AC-Wohnungsverteilung startet erst bei bestätigten AC-Quellen. Zusätzliche DC-Stringzähler können getrennt unter PV-Details erfasst werden; sie werden nicht zusätzlich in die AC-Bilanz eingerechnet.",
+        "title": "1 · Anlage",
+        "description": "Wie soll deine Anlage heißen? Danach folgen Wechselrichter, Netz, Batterie und Wohnungen.",
         "data": {
-          "name": "Name der Anlage",
-          "pv": "PV-Energiequellen (Mehrfachauswahl)",
-          "import": "Netzbezug (Energiezähler)",
-          "export": "Einspeisung (Energiezähler)",
-          "charge": "Batterieladung AC (optional)",
-          "discharge": "Batterieentladung AC (optional)",
-          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
-          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
-          "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
-          "pv_measurement": "Messseite der gewählten PV-Quellen",
-          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
+          "name": "Name der Anlage"
         }
       },
       "apartments": {
-        "title": "Wohnungen verwalten",
-        "description": "Wohnungen: {apartments}. Weitere hinzufügen oder Zuordnungen bearbeiten. Erst Speichern übernimmt die gesamte Anlage.",
+        "title": "5 · Wohnungen",
+        "description": "Bisher zugeordnet: {apartments}. Füge jede Wohnung mit ihrem Verbrauchszähler hinzu. Namen und Zähler lassen sich später bearbeiten. Danach weiter zur Zusammenfassung.",
         "menu_options": {
-          "add_apartment": "Wohnung hinzufügen",
-          "select_apartment": "Wohnung bearbeiten / pausieren / entfernen",
-          "installation": "Anlagenzähler bearbeiten",
-          "finish": "Anlage speichern"
+          "add_apartment": "Weitere Wohnung hinzufügen",
+          "select_apartment": "Wohnung bearbeiten",
+          "finish": "Weiter zur Zusammenfassung",
+          "site_menu": "Andere Einstellungen ändern"
         }
       },
       "select_apartment": {
@@ -53,6 +42,76 @@
           "meter": "Kumulativer Verbrauchszähler",
           "paused": "Wohnung pausieren",
           "remove": "Wohnung aus der Anlage entfernen"
+        }
+      },
+      "inverters": {
+        "title": "2 · Wechselrichter",
+        "description": "Wähle den kumulativen Gesamtertrag jedes Wechselrichters. Bei drei Wechselrichtern hier alle drei Sensoren auswählen. Die Erträge werden automatisch addiert. Für AC-Gesamterträge brauchst du keine Stringwerte. Beispiel Growatt: Total Power Generation. DC- oder unklare Werte ermöglichen nur Erfassung, keine AC-Wohnungsverteilung.",
+        "data": {
+          "pv": "Gesamtertrags-Sensoren der Wechselrichter",
+          "pv_measurement": "Messseite der gewählten PV-Quellen"
+        }
+      },
+      "grid": {
+        "title": "3 · Stromnetz",
+        "description": "Wähle am Hausanschluss die Energiezähler für Bezug aus dem Netz und Einspeisung ins Netz. Verwende kumulative kWh/Wh/MWh-Zähler, keine momentane Leistung.",
+        "data": {
+          "import": "Netzbezug (Energiezähler)",
+          "export": "Einspeisung (Energiezähler)"
+        }
+      },
+      "battery": {
+        "title": "4 · Batterie",
+        "description": "Ist ein gemeinsamer Batteriespeicher vorhanden? Ohne Batterie geht es direkt mit den Wohnungen weiter.",
+        "data": {
+          "has_battery": "Batteriespeicher vorhanden"
+        }
+      },
+      "battery_meters": {
+        "title": "4 · Batteriezähler",
+        "description": "Ordne getrennte AC-Energiezähler für Ladung und Entladung zu und gib die nutzbare Speicherkapazität an. Diese Felder sind nur bei einer vorhandenen Batterie nötig.",
+        "data": {
+          "charge": "Batterieladung AC",
+          "discharge": "Batterieentladung AC",
+          "battery_capacity": "Nutzbare Kapazität"
+        }
+      },
+      "pv_details": {
+        "title": "Optionale String-Details",
+        "description": "Nur zur zusätzlichen Anzeige einzelner Strings. Bei ausgewählten WR-Gesamterträgen kannst du diese Auswahl leer lassen. Diese Werte werden nicht zur PV-Summe addiert und ändern keine Wohnungsanteile.",
+        "data": {
+          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
+        }
+      },
+      "advanced": {
+        "title": "Erweiterte Einstellungen",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben.",
+        "data": {
+          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
+          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+        }
+      },
+      "site_menu": {
+        "title": "{name} · Einstellungen",
+        "description": "Wähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
+        "menu_options": {
+          "installation": "Anlagenname",
+          "inverters": "Wechselrichter",
+          "grid": "Stromnetz",
+          "battery": "Batterie",
+          "apartments": "Wohnungen",
+          "pv_details": "String-Details (optional)",
+          "advanced": "Erweiterte Einstellungen",
+          "finish": "Zusammenfassung"
+        }
+      },
+      "finish": {
+        "title": "6 · Prüfen und speichern",
+        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.",
+        "menu_options": {
+          "save": "Speichern",
+          "site_menu": "Einstellungen ändern"
         }
       }
     },
@@ -86,31 +145,20 @@
         }
       },
       "installation": {
-        "title": "SolarShare-Anlage einrichten",
-        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt. Mehrere unabhängige Wechselrichter-Ausgänge werden intern addiert. Niemals WR-Gesamtwert und dessen String-/Teilwerte gemeinsam auswählen. DC- oder unklare Quellen werden nur erfasst; eine AC-Wohnungsverteilung startet erst bei bestätigten AC-Quellen. Zusätzliche DC-Stringzähler können getrennt unter PV-Details erfasst werden; sie werden nicht zusätzlich in die AC-Bilanz eingerechnet.",
+        "title": "1 · Anlage",
+        "description": "Wie soll deine Anlage heißen? Danach folgen Wechselrichter, Netz, Batterie und Wohnungen.",
         "data": {
-          "name": "Name der Anlage",
-          "pv": "PV-Energiequellen (Mehrfachauswahl)",
-          "import": "Netzbezug (Energiezähler)",
-          "export": "Einspeisung (Energiezähler)",
-          "charge": "Batterieladung AC (optional)",
-          "discharge": "Batterieentladung AC (optional)",
-          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
-          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
-          "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
-          "pv_measurement": "Messseite der gewählten PV-Quellen",
-          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
+          "name": "Name der Anlage"
         }
       },
       "apartments": {
-        "title": "Wohnungen verwalten",
-        "description": "Wohnungen: {apartments}. Weitere hinzufügen oder Zuordnungen bearbeiten. Erst Speichern übernimmt die gesamte Anlage.",
+        "title": "5 · Wohnungen",
+        "description": "Bisher zugeordnet: {apartments}. Füge jede Wohnung mit ihrem Verbrauchszähler hinzu. Namen und Zähler lassen sich später bearbeiten. Danach weiter zur Zusammenfassung.",
         "menu_options": {
-          "add_apartment": "Wohnung hinzufügen",
-          "select_apartment": "Wohnung bearbeiten / pausieren / entfernen",
-          "installation": "Anlagenzähler bearbeiten",
-          "finish": "Anlage speichern"
+          "add_apartment": "Weitere Wohnung hinzufügen",
+          "select_apartment": "Wohnung bearbeiten",
+          "finish": "Weiter zur Zusammenfassung",
+          "site_menu": "Andere Einstellungen ändern"
         }
       },
       "select_apartment": {
@@ -127,6 +175,76 @@
           "meter": "Kumulativer Verbrauchszähler",
           "paused": "Wohnung pausieren",
           "remove": "Wohnung aus der Anlage entfernen"
+        }
+      },
+      "inverters": {
+        "title": "2 · Wechselrichter",
+        "description": "Wähle den kumulativen Gesamtertrag jedes Wechselrichters. Bei drei Wechselrichtern hier alle drei Sensoren auswählen. Die Erträge werden automatisch addiert. Für AC-Gesamterträge brauchst du keine Stringwerte. Beispiel Growatt: Total Power Generation. DC- oder unklare Werte ermöglichen nur Erfassung, keine AC-Wohnungsverteilung.",
+        "data": {
+          "pv": "Gesamtertrags-Sensoren der Wechselrichter",
+          "pv_measurement": "Messseite der gewählten PV-Quellen"
+        }
+      },
+      "grid": {
+        "title": "3 · Stromnetz",
+        "description": "Wähle am Hausanschluss die Energiezähler für Bezug aus dem Netz und Einspeisung ins Netz. Verwende kumulative kWh/Wh/MWh-Zähler, keine momentane Leistung.",
+        "data": {
+          "import": "Netzbezug (Energiezähler)",
+          "export": "Einspeisung (Energiezähler)"
+        }
+      },
+      "battery": {
+        "title": "4 · Batterie",
+        "description": "Ist ein gemeinsamer Batteriespeicher vorhanden? Ohne Batterie geht es direkt mit den Wohnungen weiter.",
+        "data": {
+          "has_battery": "Batteriespeicher vorhanden"
+        }
+      },
+      "battery_meters": {
+        "title": "4 · Batteriezähler",
+        "description": "Ordne getrennte AC-Energiezähler für Ladung und Entladung zu und gib die nutzbare Speicherkapazität an. Diese Felder sind nur bei einer vorhandenen Batterie nötig.",
+        "data": {
+          "charge": "Batterieladung AC",
+          "discharge": "Batterieentladung AC",
+          "battery_capacity": "Nutzbare Kapazität"
+        }
+      },
+      "pv_details": {
+        "title": "Optionale String-Details",
+        "description": "Nur zur zusätzlichen Anzeige einzelner Strings. Bei ausgewählten WR-Gesamterträgen kannst du diese Auswahl leer lassen. Diese Werte werden nicht zur PV-Summe addiert und ändern keine Wohnungsanteile.",
+        "data": {
+          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
+        }
+      },
+      "advanced": {
+        "title": "Erweiterte Einstellungen",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben.",
+        "data": {
+          "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
+          "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+        }
+      },
+      "site_menu": {
+        "title": "{name} · Einstellungen",
+        "description": "Wähle den Bereich, den du ändern möchtest. Alle bisherigen Zuordnungen bleiben vorbelegt. Über Zusammenfassung kannst du anschließend speichern.",
+        "menu_options": {
+          "installation": "Anlagenname",
+          "inverters": "Wechselrichter",
+          "grid": "Stromnetz",
+          "battery": "Batterie",
+          "apartments": "Wohnungen",
+          "pv_details": "String-Details (optional)",
+          "advanced": "Erweiterte Einstellungen",
+          "finish": "Zusammenfassung"
+        }
+      },
+      "finish": {
+        "title": "6 · Prüfen und speichern",
+        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.",
+        "menu_options": {
+          "save": "Speichern",
+          "site_menu": "Einstellungen ändern"
         }
       }
     },

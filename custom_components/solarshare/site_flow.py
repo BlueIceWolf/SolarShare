@@ -101,76 +101,210 @@ class InstallationWizard:
             ]
         self.editing = None
 
+    def _errors(self, step):
+        if getattr(self, "step_error", None) and self.step_error[0] == step:
+            error = self.step_error[1]
+            self.step_error = None
+            return {"base": error}
+        return {}
+
+    def _meter_errors(self, updates):
+        candidate = {**self.site["sources"], **updates}
+        meters = source_entities(candidate)
+        meters += [a["meter"] for a in self.site["apartments"] if not a.get("paused")]
+        errors = {"base": "duplicate_meter"} if len(meters) != len(set(meters)) else {}
+        for key, value in updates.items():
+            for meter in pv_entities(value):
+                if error := validate_source(self.hass, meter):
+                    errors[key] = error
+        return errors
+
+    def _meter_field(self, fields, key, current, *, multiple=False, required=True):
+        marker = probatio.Required if required else probatio.Optional
+        default = {"default": current} if current else {}
+        fields[marker(key, **default)] = energy_selector(multiple=multiple)
+
+    async def _after_section(self, next_step):
+        if getattr(self, "edit_mode", False):
+            return await self.async_step_site_menu()
+        return await getattr(self, f"async_step_{next_step}")()
+
     async def async_step_installation(self, user_input=None):
         self._ensure_config()
-        errors = {"base": self.pending_error} if getattr(self, "pending_error", None) else {}
-        self.pending_error = None
+        errors = self._errors("installation")
         if user_input is not None:
-            sources = {key: user_input.get(key, "") for key in ROLES}
-            sources["pv"] = pv_entities(sources["pv"])
             if not user_input["name"].strip():
                 errors["name"] = "empty_name"
-            elif bool(sources["charge"]) != bool(sources["discharge"]):
-                errors["base"] = "battery_pair"
             else:
-                used = source_entities(sources)
-                if len(used) != len(set(used)):
-                    errors["base"] = "duplicate_meter"
-                for key, value in sources.items():
-                    for meter in pv_entities(value):
-                        if error := validate_source(self.hass, meter):
-                            errors[key] = error
-                for meter in pv_entities(user_input.get("pv_details")):
-                    if error := validate_source(self.hass, meter):
-                        errors["pv_details"] = error
+                self.site["name"] = user_input["name"].strip()
+                return await self._after_section("inverters")
+        return self.async_show_form(
+            step_id="installation",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required("name", default=(user_input or self.site)["name"]): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_inverters(self, user_input=None):
+        self._ensure_config()
+        errors = self._errors("inverters")
+        if user_input is not None:
+            values = pv_entities(user_input.get("pv"))
+            errors.update(self._meter_errors({"pv": values}))
+            if not values:
+                errors["pv"] = "missing_sources"
             if not errors:
-                self.site.update(
-                    {key: value for key, value in user_input.items() if key not in ROLES}
+                self.site["sources"]["pv"] = values
+                self.site["pv_measurement"] = user_input["pv_measurement"]
+                return await self._after_section("grid")
+        defaults = user_input or {
+            "pv": pv_entities(self.site["sources"].get("pv")),
+            "pv_measurement": self.site["pv_measurement"],
+        }
+        fields = {}
+        self._meter_field(fields, "pv", pv_entities(defaults.get("pv")), multiple=True)
+        fields[probatio.Required("pv_measurement", default=defaults["pv_measurement"])] = (
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["ac", "dc", "unknown"], translation_key="pv_measurement"
                 )
-                self.site["sources"] = sources
-                self.site["pv_details"] = pv_entities(user_input.get("pv_details"))
-                return await self.async_step_apartments()
-        defaults = user_input or {**self.site, **self.site["sources"]}
-        fields = {probatio.Required("name", default=defaults.get("name", "SolarShare")): str}
-        for key in ROLES:
-            field = probatio.Required if key in ("pv", "import", "export") else probatio.Optional
-            kwargs = {"default": defaults[key]} if defaults.get(key) else {}
-            if key == "pv" and kwargs:
-                kwargs["default"] = pv_entities(kwargs["default"])
-            fields[field(key, **kwargs)] = energy_selector(multiple=key == "pv")
-        fields[
-            probatio.Required(
-                "pv_measurement",
-                default=defaults.get("pv_measurement", self.site["pv_measurement"]),
-            )
-        ] = selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=["ac", "dc", "unknown"], translation_key="pv_measurement"
             )
         )
-        for key, lower, upper, step in (
-            ("max_power_kw", 1, 1000, 1),
-            ("alignment_seconds", 1, 120, 1),
-            ("battery_capacity", 0.1, 1000, 0.1),
-        ):
-            fields[probatio.Required(key, default=defaults[key])] = selector.NumberSelector(
+        return self.async_show_form(
+            step_id="inverters", data_schema=probatio.Schema(fields), errors=errors
+        )
+
+    async def async_step_grid(self, user_input=None):
+        self._ensure_config()
+        errors = self._errors("grid")
+        if user_input is not None:
+            updates = {key: user_input.get(key, "") for key in ("import", "export")}
+            errors.update(self._meter_errors(updates))
+            if not all(updates.values()):
+                errors["base"] = "missing_sources"
+            if not errors:
+                self.site["sources"].update(updates)
+                return await self._after_section("battery")
+        defaults = user_input or self.site["sources"]
+        fields = {}
+        for key in ("import", "export"):
+            self._meter_field(fields, key, defaults.get(key))
+        return self.async_show_form(
+            step_id="grid", data_schema=probatio.Schema(fields), errors=errors
+        )
+
+    async def async_step_battery(self, user_input=None):
+        self._ensure_config()
+        if user_input is not None:
+            if user_input["has_battery"]:
+                return await self.async_step_battery_meters()
+            self.site["sources"].update({"charge": "", "discharge": ""})
+            return await self._after_section("apartments")
+        return self.async_show_form(
+            step_id="battery",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        "has_battery", default=bool(self.site["sources"].get("charge"))
+                    ): bool,
+                }
+            ),
+        )
+
+    async def async_step_battery_meters(self, user_input=None):
+        self._ensure_config()
+        errors = self._errors("battery_meters")
+        if user_input is not None:
+            updates = {key: user_input.get(key, "") for key in ("charge", "discharge")}
+            errors.update(self._meter_errors(updates))
+            if not all(updates.values()):
+                errors["base"] = "battery_pair"
+            if not errors:
+                self.site["sources"].update(updates)
+                self.site["battery_capacity"] = user_input["battery_capacity"]
+                return await self._after_section("apartments")
+        defaults = user_input or {
+            **self.site["sources"],
+            "battery_capacity": self.site["battery_capacity"],
+        }
+        fields = {}
+        for key in ("charge", "discharge"):
+            self._meter_field(fields, key, defaults.get(key))
+        fields[probatio.Required("battery_capacity", default=defaults["battery_capacity"])] = (
+            selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=lower, max=upper, step=step, mode=selector.NumberSelectorMode.BOX
+                    min=0.1,
+                    max=1000,
+                    step=0.1,
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement="kWh",
                 )
             )
-        fields[probatio.Optional("acknowledge", default=False)] = bool
-        fields[
-            probatio.Optional(
-                "pv_details",
-                **(
-                    {"default": pv_entities(defaults["pv_details"])}
-                    if defaults.get("pv_details")
-                    else {}
-                ),
-            )
-        ] = energy_selector(multiple=True)
+        )
         return self.async_show_form(
-            step_id="installation", data_schema=probatio.Schema(fields), errors=errors
+            step_id="battery_meters", data_schema=probatio.Schema(fields), errors=errors
+        )
+
+    async def async_step_pv_details(self, user_input=None):
+        self._ensure_config()
+        errors = self._errors("pv_details")
+        if user_input is not None:
+            details = pv_entities(user_input.get("pv_details"))
+            if len(details) != len(set(details)):
+                errors["pv_details"] = "duplicate_meter"
+            for meter in details:
+                if error := validate_source(self.hass, meter):
+                    errors["pv_details"] = error
+            if not errors:
+                self.site["pv_details"] = details
+                return await self.async_step_site_menu()
+        fields = {}
+        defaults = user_input or self.site
+        self._meter_field(
+            fields,
+            "pv_details",
+            pv_entities(defaults.get("pv_details")),
+            multiple=True,
+            required=False,
+        )
+        return self.async_show_form(
+            step_id="pv_details", data_schema=probatio.Schema(fields), errors=errors
+        )
+
+    async def async_step_advanced(self, user_input=None):
+        self._ensure_config()
+        if user_input is not None:
+            self.site.update(user_input)
+            return await self.async_step_site_menu()
+        fields = {}
+        for key, lower, upper in (("max_power_kw", 1, 1000), ("alignment_seconds", 1, 120)):
+            fields[probatio.Required(key, default=self.site[key])] = selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=lower, max=upper, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            )
+        fields[probatio.Optional("acknowledge", default=self.site.get("acknowledge", False))] = bool
+        return self.async_show_form(step_id="advanced", data_schema=probatio.Schema(fields))
+
+    async def async_step_site_menu(self, user_input=None):
+        self._ensure_config()
+        self.edit_mode = True
+        return self.async_show_menu(
+            step_id="site_menu",
+            description_placeholders={"name": self.site["name"]},
+            menu_options=[
+                "installation",
+                "inverters",
+                "grid",
+                "battery",
+                "apartments",
+                "pv_details",
+                "advanced",
+                "finish",
+            ],
         )
 
     async def async_step_apartments(self, user_input=None):
@@ -180,7 +314,7 @@ class InstallationWizard:
             description_placeholders={
                 "apartments": ", ".join(item["name"] for item in self.site["apartments"]) or "—"
             },
-            menu_options=["add_apartment", "select_apartment", "installation", "finish"],
+            menu_options=["add_apartment", "select_apartment", "finish", "site_menu"],
         )
 
     async def async_step_add_apartment(self, user_input=None):
@@ -260,14 +394,57 @@ class InstallationWizard:
             step_id="apartment", data_schema=probatio.Schema(fields), errors=errors
         )
 
+    def _entity_label(self, entity_id):
+        state = self.hass.states.get(entity_id) if entity_id else None
+        return state.attributes.get("friendly_name", entity_id) if state else (entity_id or "—")
+
     async def async_step_finish(self, user_input=None):
+        self._ensure_config()
+        if not self.site["apartments"]:
+            return await self.async_step_add_apartment()
+        sources = self.site["sources"]
+        pv = pv_entities(sources.get("pv"))
+        apartments = self.site["apartments"]
+        return self.async_show_menu(
+            step_id="finish",
+            menu_options=["save", "site_menu"],
+            description_placeholders={
+                "name": self.site["name"],
+                "pv_count": str(len(pv)),
+                "pv": "\n".join(f"- {self._entity_label(item)}" for item in pv) or "—",
+                "pv_measurement": {"ac": "AC", "dc": "DC", "unknown": "?"}[
+                    self.site["pv_measurement"]
+                ],
+                "grid_import": self._entity_label(sources.get("import")),
+                "grid_export": self._entity_label(sources.get("export")),
+                "battery": " / ".join(
+                    self._entity_label(sources.get(key)) for key in ("charge", "discharge")
+                ),
+                "apartment_count": str(len(apartments)),
+                "apartments": "\n".join(
+                    f"- {item['name']}{' ⏸' if item.get('paused') else ''}: {self._entity_label(item['meter'])}"
+                    for item in apartments
+                ),
+                "detail_count": str(len(self.site["pv_details"])),
+            },
+        )
+
+    async def async_step_save(self, user_input=None):
         self._ensure_config()
         entry = getattr(self, "config_entry", None)
         if error := validate_config(self.hass, self.site, entry.entry_id if entry else None):
             if error == "apartment_required":
                 return await self.async_step_add_apartment()
-            self.pending_error = error
-            return await self.async_step_installation()
+            if error == "single_site":
+                return self.async_abort(reason="single_site")
+            target = "battery_meters" if error == "battery_pair" else "inverters"
+            if error == "missing_sources" and self.site["sources"].get("pv"):
+                target = "grid"
+            if error == "empty_name":
+                target = "installation"
+            self.step_error = (target, error)
+            self.edit_mode = True
+            return await getattr(self, f"async_step_{target}")()
         data = deepcopy(self.site)
         acknowledge = data.pop("acknowledge", False)
         if acknowledge:
@@ -309,4 +486,7 @@ class SolarShareConfigFlow(InstallationWizard, config_entries.ConfigFlow, domain
 
 class SolarShareOptionsFlow(InstallationWizard, config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
-        return await self.async_step_installation(user_input)
+        self._ensure_config()
+        if self.converting:
+            return await self.async_step_installation(user_input)
+        return await self.async_step_site_menu(user_input)

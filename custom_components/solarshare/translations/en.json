@@ -12,31 +12,20 @@
         }
       },
       "installation": {
-        "title": "Configure SolarShare installation",
-        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated. Independent inverter outputs are summed internally. Never select both an inverter total and its string/component readings. DC or unclassified sources are monitored only; apartment AC allocation requires confirmed AC sources. Additional DC string counters can be recorded separately as PV details; they are not added to the AC balance.",
+        "title": "1 · Installation",
+        "description": "Name your installation. Next come inverters, grid, battery and apartments.",
         "data": {
-          "name": "Installation name",
-          "pv": "PV energy sources (select multiple)",
-          "import": "Grid import (energy meter)",
-          "export": "Grid export (energy meter)",
-          "charge": "Battery charge AC (optional)",
-          "discharge": "Battery discharge AC (optional)",
-          "max_power_kw": "Maximum plausible site load (kW)",
-          "alignment_seconds": "Maximum meter report skew (seconds)",
-          "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines",
-          "pv_measurement": "Measurement boundary of selected PV sources",
-          "pv_details": "PV details / strings (monitoring only, optional)"
+          "name": "Installation name"
         }
       },
       "apartments": {
-        "title": "Manage apartments",
-        "description": "Apartments: {apartments}. Add more or edit assignments. Save applies the whole installation.",
+        "title": "5 · Apartments",
+        "description": "Assigned so far: {apartments}. Add each apartment with its consumption meter. Names and assignments remain editable. Then continue to the summary.",
         "menu_options": {
           "add_apartment": "Add apartment",
-          "select_apartment": "Edit / pause / remove apartment",
-          "installation": "Edit building sources",
-          "finish": "Save installation"
+          "select_apartment": "Edit apartment",
+          "finish": "Continue to summary",
+          "site_menu": "Edit other settings"
         }
       },
       "select_apartment": {
@@ -53,6 +42,76 @@
           "meter": "Cumulative consumption meter",
           "paused": "Pause apartment",
           "remove": "Remove apartment from installation"
+        }
+      },
+      "inverters": {
+        "title": "2 · Inverters",
+        "description": "Select the cumulative total yield of every inverter. For three inverters, select all three sensors here; their yields are summed automatically. AC total yields need no string counters. Growatt example: Total Power Generation. DC or unknown readings support monitoring only, without AC apartment allocation.",
+        "data": {
+          "pv": "Inverter total-yield sensors",
+          "pv_measurement": "Measurement boundary of selected PV sources"
+        }
+      },
+      "grid": {
+        "title": "3 · Grid",
+        "description": "Select the cumulative energy counters at the building grid connection: import from the grid and export to the grid. Use kWh/Wh/MWh, not instantaneous power.",
+        "data": {
+          "import": "Grid import (energy meter)",
+          "export": "Grid export (energy meter)"
+        }
+      },
+      "battery": {
+        "title": "4 · Battery",
+        "description": "Does the installation have a shared battery? Without one, continue directly to apartments.",
+        "data": {
+          "has_battery": "Battery installed"
+        }
+      },
+      "battery_meters": {
+        "title": "4 · Battery meters",
+        "description": "Assign separate AC energy counters for charging and discharging, and enter usable capacity. These fields are only needed when a battery is installed.",
+        "data": {
+          "charge": "AC battery charging",
+          "discharge": "AC battery discharging",
+          "battery_capacity": "Usable capacity"
+        }
+      },
+      "pv_details": {
+        "title": "Optional string details",
+        "description": "Optional individual-string monitoring. Leave this empty when inverter total yields are sufficient. These readings do not add to the PV total or affect apartment allocations.",
+        "data": {
+          "pv_details": "PV details / strings (monitoring only, optional)"
+        }
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters.",
+        "data": {
+          "max_power_kw": "Maximum plausible site load (kW)",
+          "alignment_seconds": "Maximum meter report skew (seconds)",
+          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+        }
+      },
+      "site_menu": {
+        "title": "{name} · Settings",
+        "description": "Choose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
+        "menu_options": {
+          "installation": "Installation name",
+          "inverters": "Inverters",
+          "grid": "Grid",
+          "battery": "Battery",
+          "apartments": "Apartments",
+          "pv_details": "String details (optional)",
+          "advanced": "Advanced settings",
+          "finish": "Summary"
+        }
+      },
+      "finish": {
+        "title": "6 · Review and save",
+        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.",
+        "menu_options": {
+          "save": "Save",
+          "site_menu": "Edit settings"
         }
       }
     },
@@ -86,31 +145,20 @@
         }
       },
       "installation": {
-        "title": "Configure SolarShare installation",
-        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated. Independent inverter outputs are summed internally. Never select both an inverter total and its string/component readings. DC or unclassified sources are monitored only; apartment AC allocation requires confirmed AC sources. Additional DC string counters can be recorded separately as PV details; they are not added to the AC balance.",
+        "title": "1 · Installation",
+        "description": "Name your installation. Next come inverters, grid, battery and apartments.",
         "data": {
-          "name": "Installation name",
-          "pv": "PV energy sources (select multiple)",
-          "import": "Grid import (energy meter)",
-          "export": "Grid export (energy meter)",
-          "charge": "Battery charge AC (optional)",
-          "discharge": "Battery discharge AC (optional)",
-          "max_power_kw": "Maximum plausible site load (kW)",
-          "alignment_seconds": "Maximum meter report skew (seconds)",
-          "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines",
-          "pv_measurement": "Measurement boundary of selected PV sources",
-          "pv_details": "PV details / strings (monitoring only, optional)"
+          "name": "Installation name"
         }
       },
       "apartments": {
-        "title": "Manage apartments",
-        "description": "Apartments: {apartments}. Add more or edit assignments. Save applies the whole installation.",
+        "title": "5 · Apartments",
+        "description": "Assigned so far: {apartments}. Add each apartment with its consumption meter. Names and assignments remain editable. Then continue to the summary.",
         "menu_options": {
           "add_apartment": "Add apartment",
-          "select_apartment": "Edit / pause / remove apartment",
-          "installation": "Edit building sources",
-          "finish": "Save installation"
+          "select_apartment": "Edit apartment",
+          "finish": "Continue to summary",
+          "site_menu": "Edit other settings"
         }
       },
       "select_apartment": {
@@ -127,6 +175,76 @@
           "meter": "Cumulative consumption meter",
           "paused": "Pause apartment",
           "remove": "Remove apartment from installation"
+        }
+      },
+      "inverters": {
+        "title": "2 · Inverters",
+        "description": "Select the cumulative total yield of every inverter. For three inverters, select all three sensors here; their yields are summed automatically. AC total yields need no string counters. Growatt example: Total Power Generation. DC or unknown readings support monitoring only, without AC apartment allocation.",
+        "data": {
+          "pv": "Inverter total-yield sensors",
+          "pv_measurement": "Measurement boundary of selected PV sources"
+        }
+      },
+      "grid": {
+        "title": "3 · Grid",
+        "description": "Select the cumulative energy counters at the building grid connection: import from the grid and export to the grid. Use kWh/Wh/MWh, not instantaneous power.",
+        "data": {
+          "import": "Grid import (energy meter)",
+          "export": "Grid export (energy meter)"
+        }
+      },
+      "battery": {
+        "title": "4 · Battery",
+        "description": "Does the installation have a shared battery? Without one, continue directly to apartments.",
+        "data": {
+          "has_battery": "Battery installed"
+        }
+      },
+      "battery_meters": {
+        "title": "4 · Battery meters",
+        "description": "Assign separate AC energy counters for charging and discharging, and enter usable capacity. These fields are only needed when a battery is installed.",
+        "data": {
+          "charge": "AC battery charging",
+          "discharge": "AC battery discharging",
+          "battery_capacity": "Usable capacity"
+        }
+      },
+      "pv_details": {
+        "title": "Optional string details",
+        "description": "Optional individual-string monitoring. Leave this empty when inverter total yields are sufficient. These readings do not add to the PV total or affect apartment allocations.",
+        "data": {
+          "pv_details": "PV details / strings (monitoring only, optional)"
+        }
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters.",
+        "data": {
+          "max_power_kw": "Maximum plausible site load (kW)",
+          "alignment_seconds": "Maximum meter report skew (seconds)",
+          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+        }
+      },
+      "site_menu": {
+        "title": "{name} · Settings",
+        "description": "Choose the section to edit. Existing assignments remain filled in. Review the summary to save your changes.",
+        "menu_options": {
+          "installation": "Installation name",
+          "inverters": "Inverters",
+          "grid": "Grid",
+          "battery": "Battery",
+          "apartments": "Apartments",
+          "pv_details": "String details (optional)",
+          "advanced": "Advanced settings",
+          "finish": "Summary"
+        }
+      },
+      "finish": {
+        "title": "6 · Review and save",
+        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.",
+        "menu_options": {
+          "save": "Save",
+          "site_menu": "Edit settings"
         }
       }
     },
