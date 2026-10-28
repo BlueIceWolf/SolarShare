@@ -135,7 +135,8 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         changed["pv"] += Decimal(".4")
         changed["import"] += Decimal(".6")
         changed[f"apt:{apartment['id']}"] += Decimal(1)
-        runtime.ledger.observe(changed, dict.fromkeys(changed, 70), 70, day)
+        for stamp in range(70, 311, 60):
+            runtime.ledger.observe(changed, dict.fromkeys(changed, stamp), stamp, day)
         self.assertTrue(point.available)
         self.assertEqual(point.native_value, Decimal(40))
         runtime.ledger.interrupt("source_unavailable")
@@ -214,13 +215,14 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(runtime.readings["pv"])
         self.hass.states.async_set("sensor.import", "100.1", ATTRS)
         self.hass.states.async_set("sensor.a", "100.1", ATTRS)
-        with patch("custom_components.solarshare.site_runtime.time.time", return_value=70):
-            await runtime._sample()
+        for stamp in range(70, 311, 60):
+            with patch("custom_components.solarshare.site_runtime.time.time", return_value=stamp):
+                await runtime._sample()
         self.assertTrue(runtime.ledger.available)
         self.assertEqual(runtime.ledger.reason, "observing_pv_night")
         self.assertEqual(runtime.ledger.totals()["site"]["pv"], 0)
         self.hass.states.async_set("sun.sun", "above_horizon")
-        with patch("custom_components.solarshare.site_runtime.time.time", return_value=130):
+        with patch("custom_components.solarshare.site_runtime.time.time", return_value=370):
             await runtime._sample()
         self.assertFalse(runtime.ledger.available)
         self.assertFalse(runtime.night.sleeping)

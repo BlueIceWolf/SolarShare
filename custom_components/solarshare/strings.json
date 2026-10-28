@@ -339,7 +339,8 @@
           "pv_measurement_boundary_unclear": "Select AC PV sources",
           "overlapping_pv_sources": "Same inverter counted twice",
           "observing_pv_night": "Calculation active – PV night mode (zero generation assumed)",
-          "pv_night_transition": "New baseline for PV night/day transition"
+          "pv_night_transition": "New baseline for PV night/day transition",
+          "waiting_for_meter_window": "Collecting meter readings – waiting for a shared energy balance"
         }
       }
     }

@@ -47,6 +47,7 @@ class SiteRuntime:
             skew=self.config.get("alignment_seconds", 60),
             pv_keys=self.pv_keys,
             require_fresh_reports=self.config.get("require_fresh_reports", False),
+            aggregation_seconds=0 if self.config.get("require_fresh_reports", False) else 300,
         )
         self.store = Store(hass, 1, f"{DOMAIN}.site.{entry.entry_id}", atomic_writes=True)
         self.identities = {}
@@ -120,7 +121,9 @@ class SiteRuntime:
             return
         state = event.data.get("new_state")
         if event.data["entity_id"] == "sun.sun":
-            self._queue()
+            old = event.data.get("old_state")
+            if old is None or state is None or old.state != state.state:
+                self._queue()
             return
         # Evaluate invalid states immediately. Valid states are sampled together
         # on the common timer, rather than assigning an event from one apartment.
@@ -220,7 +223,7 @@ class SiteRuntime:
                 self.ledger.observe(
                     effective, effective_times, now, dt_util.now().date().isoformat()
                 )
-                if self.ledger.available and self.night.sleeping:
+                if self.ledger.reason == "observing" and self.night.sleeping:
                     self.ledger.reason = "observing_pv_night"
             else:
                 self.ledger.interrupt("pv_measurement_boundary_unclear")

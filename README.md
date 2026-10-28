@@ -280,3 +280,30 @@ vollständige Gebäudebilanz berechnen. Prüfe die Quellintegration bzw. die aus
 Zähler. Einstellungen allein können fehlende Messwerte nicht rekonstruieren.
 
 Für ausschließlich schlafende PV-Quellen gilt die oben beschriebene explizite Nachtannahme; fehlende Netz-/Batteriewerte bleiben davon ausgenommen.
+
+## Grobe Zählerschritte und verzögerte Berichte (ab 0.2.7)
+
+Growatt-Gesamtzähler können in 0,1-kWh-Schritten steigen, während Shelly-Zähler
+kleinste Verbrauchsänderungen melden. Im normalen Snapshot-Modus sammelt SolarShare
+daher mindestens fünf Minuten an einer gemeinsamen Messbasis. Passt die Bilanz
+noch nicht, bleibt diese Basis bis zu einer Stunde erhalten. Der Status lautet
+**Sammle Zählerwerte – warte auf gemeinsame Energiebilanz**. Es werden weder
+Netzbezug noch Batterieenergie aus dem Wohnungsverbrauch erfunden. Auch bei kleinen
+Wohnungsverbräuchen wird ein vollständig unveränderter Versorgungszähler nicht
+als erfolgreiche Nullversorgung verbucht.
+
+Nach einer erfolgreichen Bilanz werden die gesammelten Zählerdifferenzen einmalig
+verteilt. Bereits veröffentlichte Summen bleiben während des Wartens erhalten;
+das Intervall-Leistungsmittel ist bis zum nächsten abgeschlossenen Fenster unbekannt.
+`pending_seconds` und `pending_balance` im Datenqualitätssensor zeigen die offene
+Zeitspanne sowie Versorgung und Wohnungsverbrauch in kWh. Die Verteilung und
+Autarkie sind Schätzungen über dieses gemeinsame Zeitfenster; zeitgleiche, exakt
+gemessene Energieherkunft je Wohnung lässt sich aus groben Zählern nicht ableiten.
+
+Fehlende/ungültige Quellen, mehr als fünf Minuten ohne SolarShare-Abtastung,
+Neustarts, Tages- und PV-Nacht/Tagwechsel unterbrechen das Fenster weiterhin.
+Daten aus diesen Lücken werden nicht nachgetragen. Rückläufige Zählerstände
+werden auch während des Sammelns erkannt. Eine nach einer Stunde weiterhin
+widersprüchliche Bilanz stoppt das Fenster mit der entsprechenden Fehlermeldung.
+Gegenläufige Flüsse innerhalb eines Fensters bleiben von der Verteilung ausgeschlossen.
+Die optionale strenge Berichtsprüfung behält ihre bisherige kurze Intervallprüfung.

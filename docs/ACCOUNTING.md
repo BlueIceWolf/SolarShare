@@ -92,3 +92,14 @@ approval are outside this initial integration. No invoice generator is shipped.
 4. All allocations conserve measured energy within declared meter tolerances.
 5. A billing period with unresolved intervals cannot silently appear complete.
 6. Ledger/schema migrations preserve identities, totals and adjustment references.
+
+### Gemeinsames Fenster für grobe Register (0.2.7)
+
+Snapshot-Betrieb sammelt mindestens 300 Sekunden, bei offener Versorgungsbilanz
+bis zu 3600 Sekunden. Die Baseline bleibt dabei erhalten, es entstehen keine
+Lücken pro grobem Zählerschritt. Beobachtungszeitpunkt und Buchungsbaseline sind
+getrennt: Eine echte Abtastlücke >300 Sekunden unterbricht weiterhin, ebenso
+fehlende Quellen, Tageswechsel, Neustart und PV-Nacht/Tagwechsel. Sinkende Werte
+werden gegen den vorigen Sample geprüft, auch wenn sie über der Baseline liegen.
+Die 0,02-kWh-Bilanztoleranz rechtfertigt keine Nullversorgung bei gemessenem
+Wohnungsverbrauch. Pending-Diagnosen verändern keine gebuchten Summen.

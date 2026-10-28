@@ -339,7 +339,8 @@
           "pv_measurement_boundary_unclear": "AC-PV-Quellen auswählen",
           "overlapping_pv_sources": "Wechselrichter doppelt zugeordnet",
           "observing_pv_night": "Berechnung aktiv – PV-Nachtbetrieb (0 Ertrag angenommen)",
-          "pv_night_transition": "Neue Messbasis für PV-Nacht-/Tagwechsel"
+          "pv_night_transition": "Neue Messbasis für PV-Nacht-/Tagwechsel",
+          "waiting_for_meter_window": "Sammle Zählerwerte – warte auf gemeinsame Energiebilanz"
         }
       }
     }

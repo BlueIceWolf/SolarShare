@@ -40,6 +40,7 @@ class SiteLedger:
         skew=60,
         pv_keys=("pv",),
         require_fresh_reports=True,
+        aggregation_seconds=0,
     ):
         self.apartment_ids = tuple(apartment_ids)
         self.pv_keys = tuple(pv_keys)
@@ -48,6 +49,11 @@ class SiteLedger:
         self.max_power = Decimal(str(max_power))
         self.skew = float(skew)
         self.require_fresh_reports = require_fresh_reports
+        self.aggregation_seconds = max(0, int(aggregation_seconds))
+        self.last_observation = None
+        self.last_readings = None
+        self.pending_seconds = 0
+        self.pending_balance = None
         self.baseline = None
         self.baseline_times = None
         self.baseline_day = None
@@ -74,6 +80,9 @@ class SiteLedger:
         if self.baseline is not None:
             self.gaps += 1
         self.baseline = self.baseline_times = self.frame_time = self.baseline_day = None
+        self.last_observation = self.last_readings = None
+        self.pending_seconds = 0
+        self.pending_balance = None
         self.available = False
         self.interval = None
         self.reason = reason
@@ -141,19 +150,24 @@ class SiteLedger:
             # Sample available numeric states together; no missing source is
             # replaced. These are snapshots, not synchronized source reports.
             times = dict.fromkeys(self.required, now)
+        current = {key: readings[key] for key in self.required}
         if self.baseline is not None:
-            elapsed = now - self.frame_time
-            if elapsed <= 0:
+            since_sample = now - self.last_observation
+            if since_sample <= 0:
                 self.interrupt("out_of_order")
                 return False
-            if elapsed > 300 or day != self.baseline_day:
+            if since_sample > 300 or day != self.baseline_day:
                 self.interrupt("observation_or_day_boundary")
+            elif any(current[key] < self.last_readings[key] for key in self.required):
+                self.review = True
+                self.interrupt("meter_reset_or_implausible_jump")
+                return False
             elif any(times[key] <= self.baseline_times[key] for key in self.required):
                 # Wait for a report from every source. Never mix an old meter value
                 # with fresh values from the other apartments.
                 self.reason = "waiting_for_aligned_reports"
                 return False
-        current = {key: readings[key] for key in self.required}
+        self.last_observation, self.last_readings = now, current
         if self.baseline is None:
             self.baseline, self.baseline_times = current, times
             self.frame_time, self.baseline_day = now, day
@@ -173,11 +187,39 @@ class SiteLedger:
             self.review = True
             self.interrupt("implausible_total_pv_jump")
             return False
+        self.pending_seconds = now - self.frame_time
+        self.pending_balance = {
+            "supply_kwh": str(
+                deltas["pv"]
+                + deltas["import"]
+                + deltas.get("discharge", ZERO)
+                - deltas["export"]
+                - deltas.get("charge", ZERO)
+            ),
+            "apartments_kwh": str(sum((deltas[f"apt:{key}"] for key in self.apartment_ids), ZERO)),
+        }
+        # Coarse cumulative registers must share an observation window with the
+        # fine apartment counters. Waiting keeps the original baseline; it does
+        # not publish invented supply or discard consumption at every poll.
+        if self.pending_seconds < self.aggregation_seconds:
+            self.interval = None
+            self.reason = "waiting_for_meter_window"
+            return False
         try:
             allocation, site, pools = self.allocate(deltas)
         except ValueError as err:
+            if (
+                self.aggregation_seconds
+                and str(err) in ("inconsistent_energy_balance", "unresolved_export_origin")
+                and self.pending_seconds < 3600
+            ):
+                self.interval = None
+                self.reason = "waiting_for_meter_window"
+                return False
             self.interrupt(str(err))
             return False
+        self.pending_seconds = 0
+        self.pending_balance = None
         self.pools = pools
         for period in ("lifetime", "day", "month", "year"):
             key = self.period_key(period, day)
@@ -215,7 +257,11 @@ class SiteLedger:
             raise ValueError("unresolved_export_origin")
         load = pv + imported + discharge - exported - charge
         apartment_load = sum((delta[f"apt:{key}"] for key in self.apartment_ids), ZERO)
-        if load < 0 or apartment_load > load + Decimal("0.02"):
+        if (
+            load < 0
+            or (load == 0 and apartment_load > 0)
+            or apartment_load > load + Decimal("0.02")
+        ):
             raise ValueError("inconsistent_energy_balance")
         denominator = max(load, apartment_load)
         unknown_balance = denominator - load

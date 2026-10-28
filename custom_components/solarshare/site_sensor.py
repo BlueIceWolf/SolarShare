@@ -187,6 +187,7 @@ class SiteStatus(SiteEntity):
         "overlapping_pv_sources",
         "observing_pv_night",
         "pv_night_transition",
+        "waiting_for_meter_window",
     ]
 
     def __init__(self, entry):
@@ -229,6 +230,9 @@ class SiteStatus(SiteEntity):
             and details["required_for_allocation"]
         ]
         result["require_fresh_reports"] = self.runtime.config.get("require_fresh_reports", False)
+        result["aggregation_seconds"] = self.runtime.ledger.aggregation_seconds
+        result["pending_seconds"] = self.runtime.ledger.pending_seconds
+        result["pending_balance"] = self.runtime.ledger.pending_balance
         result["pv_night_sleep"] = self.runtime.night.enabled
         result["sun_state"] = self.runtime._sun_state()
         result["pv_night_assumed_zero"] = [
