@@ -87,11 +87,12 @@
       },
       "advanced": {
         "title": "Erweiterte Einstellungen",
-        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben.",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet.",
         "data": {
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
+          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten"
         }
       },
       "site_menu": {
@@ -143,7 +144,8 @@
       "apartment_required": "Mindestens eine Wohnung hinzufügen.",
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
-      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen."
+      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen.",
+      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden."
     },
     "abort": {
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
@@ -238,11 +240,12 @@
       },
       "advanced": {
         "title": "Erweiterte Einstellungen",
-        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben.",
+        "description": "Die Standardwerte reichen normalerweise für den Einstieg. Eine Prüfsperre nur nach Prüfung der betroffenen Zähler aufheben. Standardmäßig dürfen gültige Zählerstände unverändert bleiben, etwa nachts oder bei Stillstand. Die strenge Prüfung verlangt neue Berichte aller Zähler innerhalb von fünf Minuten und ist nur für entsprechend regelmäßig meldende Quellen geeignet.",
         "data": {
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
+          "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten"
         }
       },
       "site_menu": {
@@ -294,7 +297,8 @@
       "apartment_required": "Mindestens eine Wohnung hinzufügen.",
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
-      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen."
+      "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen.",
+      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden."
     }
   },
   "selectors": {
@@ -303,6 +307,36 @@
         "ac": "AC: Wechselrichter-Ausgang",
         "dc": "DC: String / vor Wechselrichter – nur Erfassung",
         "unknown": "Unklar – nur Erfassung"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "data_quality": {
+        "name": "Datenqualität",
+        "state": {
+          "waiting_for_sources": "Warte auf Zähler",
+          "review_required": "Zählerprüfung erforderlich",
+          "source_unavailable": "Benötigter Zähler nicht verfügbar",
+          "invalid_reading": "Ungültiger Zählerstand",
+          "stale_source": "Zählerbericht zu alt (strenge Prüfung)",
+          "sources_not_aligned": "Zählerberichte zeitlich versetzt (strenge Prüfung)",
+          "out_of_order": "Zeitfolge unterbrochen",
+          "observation_or_day_boundary": "Neue Messbasis erforderlich",
+          "waiting_for_aligned_reports": "Warte auf neue Zählerberichte",
+          "baseline_ready": "Messbasis gesetzt – nächster Durchlauf folgt",
+          "meter_reset_or_implausible_jump": "Zählerreset oder Sprung prüfen",
+          "implausible_total_pv_jump": "PV-Gesamtsprung prüfen",
+          "mixed_direction_interval": "Gegenläufige Energieflüsse im Intervall",
+          "unresolved_export_origin": "Herkunft der Einspeisung ungeklärt",
+          "inconsistent_energy_balance": "Energiebilanz der Zähler widersprüchlich",
+          "battery_capacity_exceeded": "Batteriekapazität prüfen",
+          "observing": "Berechnung aktiv",
+          "storage_error": "Speicherfehler – Berechnung pausiert",
+          "stopped": "Angehalten",
+          "pv_measurement_boundary_unclear": "AC-PV-Quellen auswählen",
+          "overlapping_pv_sources": "Wechselrichter doppelt zugeordnet"
+        }
       }
     }
   }

@@ -89,6 +89,9 @@ class SiteEntity(SensorEntity):
             "origin_model": "virtual_battery_inventory_95_percent_efficiency",
             "accounting_scope": "complete_observed_intervals_only",
             "pv_measurement": self.runtime.config.get("pv_measurement", "ac"),
+            "source_sampling": "fresh_reports"
+            if self.runtime.config.get("require_fresh_reports", False)
+            else "available_counter_snapshots",
         }
 
 
@@ -158,6 +161,31 @@ class EnergyPoint(SiteEntity):
 
 class SiteStatus(SiteEntity):
     _attr_icon = "mdi:list-status"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "data_quality"
+    _attr_options = [
+        "waiting_for_sources",
+        "review_required",
+        "source_unavailable",
+        "invalid_reading",
+        "stale_source",
+        "sources_not_aligned",
+        "out_of_order",
+        "observation_or_day_boundary",
+        "waiting_for_aligned_reports",
+        "baseline_ready",
+        "meter_reset_or_implausible_jump",
+        "implausible_total_pv_jump",
+        "mixed_direction_interval",
+        "unresolved_export_origin",
+        "inconsistent_energy_balance",
+        "battery_capacity_exceeded",
+        "observing",
+        "storage_error",
+        "stopped",
+        "pv_measurement_boundary_unclear",
+        "overlapping_pv_sources",
+    ]
 
     def __init__(self, entry):
         super().__init__(entry, "site_status", "Datenqualität")
@@ -165,6 +193,42 @@ class SiteStatus(SiteEntity):
     @property
     def native_value(self):
         return self.runtime.ledger.reason
+
+    @property
+    def extra_state_attributes(self):
+        result = super().extra_state_attributes
+        now = time.time()
+        diagnostics = {}
+        for role, entity_id in self.runtime.meters.items():
+            stamp = self.runtime.reading_times.get(role)
+            diagnostics[entity_id] = {
+                "role": role,
+                "valid_numeric_state": self.runtime.readings.get(role) is not None,
+                "last_report_age_seconds": round(max(now - stamp, 0))
+                if stamp is not None
+                else None,
+                "required_for_allocation": role in self.runtime.accounting_keys,
+            }
+        result["source_diagnostics"] = diagnostics
+        result["unavailable_sources"] = [
+            entity_id
+            for entity_id, details in diagnostics.items()
+            if not details["valid_numeric_state"] and details["required_for_allocation"]
+        ]
+        result["sources_without_recent_report"] = [
+            entity_id
+            for entity_id, details in diagnostics.items()
+            if details["last_report_age_seconds"] is not None
+            and details["last_report_age_seconds"] > 300
+            and details["required_for_allocation"]
+        ]
+        result["require_fresh_reports"] = self.runtime.config.get("require_fresh_reports", False)
+        from .pv_sources import overlapping_growatt_totals
+
+        result["overlapping_pv_sources"] = overlapping_growatt_totals(
+            self.runtime.config["sources"].get("pv")
+        )
+        return result
 
 
 class SourceReading(SiteEntity):
@@ -201,8 +265,10 @@ class SourceReading(SiteEntity):
         return (
             self.runtime.ledger.reason not in ("stale_source", "storage_error", "stopped")
             and self.native_value is not None
-            and stamp is not None
-            and -1 <= time.time() - stamp <= 300
+            and (
+                not self.runtime.config.get("require_fresh_reports", False)
+                or (stamp is not None and -1 <= time.time() - stamp <= 300)
+            )
         )
 
 

@@ -155,5 +155,40 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(self.site.totals()["site"]["pv"], 1)
 
 
+class SnapshotTests(unittest.TestCase):
+    def setUp(self):
+        self.site = SiteLedger(["a"], require_fresh_reports=False)
+        self.readings = dict.fromkeys(self.site.required, D(100))
+        self.times = dict.fromkeys(self.site.required, 10)
+        self.day = "2026-10-28"
+        self.site.observe(self.readings, self.times, 4000, self.day)
+
+    def test_available_night_pv_counter_can_remain_unchanged(self):
+        changed = self.readings | {"import": D("100.2"), "apt:a": D("100.2")}
+        self.assertTrue(self.site.observe(changed, self.times, 4060, self.day))
+        apartment = self.site.totals()["apartments"]["a"]
+        self.assertEqual(apartment["solar"], 0)
+        self.assertEqual(apartment["grid"], D(".2"))
+        self.assertEqual(module.apartment_metric(apartment, "autarky"), 0)
+
+    def test_missing_source_is_not_zero_and_gap_is_not_recovered(self):
+        self.assertFalse(
+            self.site.observe(self.readings | {"pv": None}, self.times, 4060, self.day)
+        )
+        self.assertEqual(self.site.reason, "source_unavailable")
+        self.site.observe(
+            self.readings | {"import": D(200), "apt:a": D(200)}, self.times, 4120, self.day
+        )
+        self.assertIsNone(self.site.totals())
+
+    def test_runtime_outage_still_breaks_continuity(self):
+        self.assertFalse(
+            self.site.observe(
+                self.readings | {"import": D(101), "apt:a": D(101)}, self.times, 4400, self.day
+            )
+        )
+        self.assertIsNone(self.site.totals())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .accounting import energy_kwh
 from .const import DOMAIN
-from .pv_sources import source_meters, total_pv
+from .pv_sources import overlapping_growatt_totals, source_meters, total_pv
 from .site_accounting import SiteLedger
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ class SiteRuntime:
             max_power=self.config.get("max_power_kw", 100),
             skew=self.config.get("alignment_seconds", 60),
             pv_keys=self.pv_keys,
+            require_fresh_reports=self.config.get("require_fresh_reports", False),
         )
         self.store = Store(hass, 1, f"{DOMAIN}.site.{entry.entry_id}", atomic_writes=True)
         self.identities = {}
@@ -175,7 +176,9 @@ class SiteRuntime:
                 timestamps.pop("pv", None)
             self.readings = readings
             self.reading_times = timestamps
-            if self.config.get("pv_measurement", "ac") == "ac":
+            if overlapping_growatt_totals(self.config["sources"].get("pv")):
+                self.ledger.interrupt("overlapping_pv_sources")
+            elif self.config.get("pv_measurement", "ac") == "ac":
                 self.ledger.observe(readings, timestamps, now, dt_util.now().date().isoformat())
             else:
                 self.ledger.interrupt("pv_measurement_boundary_unclear")

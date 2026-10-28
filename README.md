@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.3** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.2.4** ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -143,12 +143,28 @@ Zusätzlich gibt es Quellzählerstände und einen Datenqualitätssensor.
 
 ## Berechnung und Grenzen
 
-Alle 60 Sekunden wird ein gemeinsamer Messrahmen geprüft. Alle Quellen müssen
-seit dem vorherigen Rahmen erneut berichtet haben, höchstens fünf Minuten alt sein
-und innerhalb des konfigurierten Zeitversatzes liegen (Standard 60 Sekunden).
-Auch unveränderte, neu gemeldete Zählerstände zählen über `last_reported` als Bericht.
-Die Werte sind eine zeitlich begrenzte **Intervallzuordnung**, keine physische
-Messung des Stromursprungs jeder Wohnung.
+Alle 60 Sekunden werden die aktuell verfügbaren kumulativen Zählerstände gemeinsam
+abgetastet. Ein unveränderter PV-Zähler nachts oder ein stillstehender Lade-/Bezugs-
+zähler ist weiterhin ein gültiger Stand. Für die Differenzberechnung braucht er nicht
+alle fünf Minuten einen neuen Änderungsbericht. Fehlende, `unknown`, `unavailable`,
+wiederhergestellte oder ungültige Quellen werden niemals durch null ersetzt.
+
+Die Standardberechnung ist eine **Zuordnung anhand verfügbarer Zustandsschnappschüsse**,
+keine nachgewiesen zeitsynchrone Messung jeder Quelle. Meldet eine Quellintegration
+eingefrorene Zahlen weiterhin als verfügbar, kann dies allein anhand des Zählerstands
+nicht sicher von Stillstand unterschieden werden. Unter **Erweiterte Einstellungen**
+kann deshalb die **strenge Frischeprüfung** aktiviert werden. Sie verlangt neue
+Berichte aller Quellen innerhalb von fünf Minuten und den eingestellten Zeitversatz;
+das ist nur für zuverlässig und regelmäßig meldende Integrationen geeignet.
+Unabhängig vom Modus unterbricht eine echte Beobachtungspause von über fünf Minuten
+die Messbasis. Datenlücken werden nicht nachgetragen.
+
+Der Datenqualitätssensor zeigt verständliche Zustände. Seine Attribute enthalten
+`source_diagnostics`, `unavailable_sources` und `sources_without_recent_report`,
+damit die betroffenen Entitäten sichtbar sind. Ein alter Änderungsbericht allein
+ist im Standardmodus kein Ausfall. Überlappende Growatt-Gesamtzähler desselben WR
+(`total_power_generation` plus `total_solar_energy`) werden als Doppelzuordnung
+erkannt und dürfen nicht gemeinsam verrechnet werden.
 
 Ohne Speicher gilt pro Intervall:
 
@@ -183,8 +199,9 @@ erweitertes Modell nötig.
 
 ## Datenlücken, Neustarts und Speicherung
 
-Fehlende, nicht verfügbare, wiederhergestellte, veraltete oder zeitlich unpassende
-Quellen führen zu `unavailable`, niemals zu erfundenen Nullen. Ein neuer kompletter
+Fehlende, nicht verfügbare, wiederhergestellte oder ungültige Quellen führen zu
+`unavailable`, niemals zu erfundenen Nullen. In der optionalen strengen Frischeprüfung
+gilt dies zusätzlich für veraltete oder zeitlich unpassende Berichte. Ein neuer kompletter
 Messrahmen setzt erst eine Basis; nur der folgende vollständige Rahmen liefert
 Energie. Fehlende Intervalle werden nicht nachgetragen. Tagesgrenzen starten eine
 neue Basis, damit ein Intervall über Mitternacht nicht falsch einem Tag zugeordnet wird.

@@ -8,8 +8,9 @@ PV/grid allocation, self-sufficiency and a virtual battery-origin model. The cur
 rules, uncertainty treatment and supported measurement topology are documented in
 the [README](../README.md). The following phases describe the original roadmap;
 the immutable interval journal, SOC reconciliation and financial reporting remain
-future work. Current source alignment is a bounded common sampling frame, not an
-interpolated or billing-certified synchronized meter reading.
+future work. Since 0.2.4 the default uses available cumulative-state snapshots so
+idle counters remain usable; strict report freshness/alignment is optional. Neither
+mode is an interpolated or billing-certified synchronized meter reading.
 
 ## Delivered in 0.1
 

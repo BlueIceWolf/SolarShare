@@ -70,6 +70,15 @@ class MultiPVTests(unittest.TestCase):
         )
         self.assertNotEqual(len(entities), len(set(entities)))
 
+    def test_two_growatt_totals_of_same_inverter_are_detected(self):
+        ac = "sensor.growatt_mod_4000_tl_3_total_power_generation"
+        other = "sensor.growatt_mod_4000_tl_3_total_solar_energy"
+        self.assertEqual(sources.overlapping_growatt_totals([ac, other]), [[ac, other]])
+        self.assertEqual(
+            sources.overlapping_growatt_totals([ac, "sensor.growatt_mod_6000_total_solar_energy"]),
+            [],
+        )
+
     def test_total_is_not_the_first_source_and_missing_never_becomes_zero(self):
         self.assertEqual(sources.total_pv({"one": D(1), "two": D(2)}, ["one", "two"]), 3)
         self.assertIsNone(sources.total_pv({"one": D(1)}, ["one", "two"]))

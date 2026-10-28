@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
-from .pv_sources import pv_entities, source_entities
+from .pv_sources import overlapping_growatt_totals, pv_entities, source_entities
 
 ROLES = ("pv", "import", "export", "charge", "discharge")
 
@@ -42,6 +42,8 @@ def validate_config(hass, config, entry_id=None):
     if not config["name"].strip():
         return "empty_name"
     sources = config["sources"]
+    if overlapping_growatt_totals(sources.get("pv")):
+        return "overlapping_pv_sources"
     if any(not sources.get(key) for key in ("pv", "import", "export")):
         return "missing_sources"
     if bool(sources.get("charge")) != bool(sources.get("discharge")):
@@ -89,6 +91,7 @@ class InstallationWizard:
                     "revision": uuid4().hex,
                     "pv_measurement": "ac" if old.get("sources") else "unknown",
                     "pv_details": [],
+                    "require_fresh_reports": False,
                 }.items()
             }
         )
@@ -113,6 +116,8 @@ class InstallationWizard:
         meters = source_entities(candidate)
         meters += [a["meter"] for a in self.site["apartments"] if not a.get("paused")]
         errors = {"base": "duplicate_meter"} if len(meters) != len(set(meters)) else {}
+        if overlapping_growatt_totals(candidate.get("pv")):
+            errors["pv" if "pv" in updates else "base"] = "overlapping_pv_sources"
         for key, value in updates.items():
             for meter in pv_entities(value):
                 if error := validate_source(self.hass, meter):
@@ -350,6 +355,9 @@ class InstallationWizard:
                 )
             )
         fields[probatio.Optional("acknowledge", default=self.site.get("acknowledge", False))] = bool
+        fields[
+            probatio.Optional("require_fresh_reports", default=self.site["require_fresh_reports"])
+        ] = bool
         return self.async_show_form(step_id="advanced", data_schema=probatio.Schema(fields))
 
     async def async_step_site_menu(self, user_input=None):

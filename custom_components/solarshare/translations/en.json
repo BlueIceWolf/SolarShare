@@ -87,11 +87,12 @@
       },
       "advanced": {
         "title": "Advanced settings",
-        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters.",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources.",
         "data": {
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+          "acknowledge": "Sources checked: clear review hold and establish new baselines",
+          "require_fresh_reports": "Strict freshness: require regular reports from every meter"
         }
       },
       "site_menu": {
@@ -143,7 +144,8 @@
       "apartment_required": "Add at least one apartment.",
       "missing_sources": "Select PV production, grid import and grid export meters.",
       "single_site": "An installation already exists. Add apartments in its configuration.",
-      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details."
+      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details.",
+      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source."
     },
     "abort": {
       "single_site": "An installation already exists. Add apartments in its configuration."
@@ -238,11 +240,12 @@
       },
       "advanced": {
         "title": "Advanced settings",
-        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters.",
+        "description": "Defaults normally suffice to get started. Clear a review hold only after checking the affected meters. By default, valid counter values may remain unchanged, e.g. overnight or while idle. Strict mode requires new reports from every source within five minutes and is only suitable for regularly reporting sources.",
         "data": {
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+          "acknowledge": "Sources checked: clear review hold and establish new baselines",
+          "require_fresh_reports": "Strict freshness: require regular reports from every meter"
         }
       },
       "site_menu": {
@@ -294,7 +297,8 @@
       "apartment_required": "Add at least one apartment.",
       "missing_sources": "Select PV production, grid import and grid export meters.",
       "single_site": "An installation already exists. Add apartments in its configuration.",
-      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details."
+      "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details.",
+      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source."
     }
   },
   "selectors": {
@@ -303,6 +307,36 @@
         "ac": "AC: inverter output",
         "dc": "DC: string / before inverter – monitoring only",
         "unknown": "Unknown – monitoring only"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "data_quality": {
+        "name": "Data quality",
+        "state": {
+          "waiting_for_sources": "Waiting for meters",
+          "review_required": "Check meters",
+          "source_unavailable": "Required meter unavailable",
+          "invalid_reading": "Invalid meter reading",
+          "stale_source": "Meter report too old (strict mode)",
+          "sources_not_aligned": "Meter reports not aligned (strict mode)",
+          "out_of_order": "Time sequence interrupted",
+          "observation_or_day_boundary": "New observation baseline needed",
+          "waiting_for_aligned_reports": "Waiting for new meter reports",
+          "baseline_ready": "Baseline ready – waiting for next sample",
+          "meter_reset_or_implausible_jump": "Check meter reset or jump",
+          "implausible_total_pv_jump": "Check PV total jump",
+          "mixed_direction_interval": "Interval has mixed energy directions",
+          "unresolved_export_origin": "Export origin unresolved",
+          "inconsistent_energy_balance": "Meter energy balance inconsistent",
+          "battery_capacity_exceeded": "Check battery capacity",
+          "observing": "Calculation active",
+          "storage_error": "Storage error – calculation paused",
+          "stopped": "Stopped",
+          "pv_measurement_boundary_unclear": "Select AC PV sources",
+          "overlapping_pv_sources": "Same inverter counted twice"
+        }
       }
     }
   }

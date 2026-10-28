@@ -31,7 +31,15 @@ class SiteLedger:
     """Only complete source frames can affect apartments; missing data is not zero."""
 
     def __init__(
-        self, apartment_ids, *, battery=False, capacity=10, max_power=100, skew=60, pv_keys=("pv",)
+        self,
+        apartment_ids,
+        *,
+        battery=False,
+        capacity=10,
+        max_power=100,
+        skew=60,
+        pv_keys=("pv",),
+        require_fresh_reports=True,
     ):
         self.apartment_ids = tuple(apartment_ids)
         self.pv_keys = tuple(pv_keys)
@@ -39,6 +47,7 @@ class SiteLedger:
         self.capacity = Decimal(str(capacity))
         self.max_power = Decimal(str(max_power))
         self.skew = float(skew)
+        self.require_fresh_reports = require_fresh_reports
         self.baseline = None
         self.baseline_times = None
         self.baseline_day = None
@@ -120,12 +129,18 @@ class SiteLedger:
             self.interrupt("invalid_reading")
             return False
         times = {key: timestamps[key] for key in self.required}
-        if any(now - stamp > 300 or stamp > now + 1 for stamp in times.values()):
-            self.interrupt("stale_source")
-            return False
-        if max(times.values()) - min(times.values()) > self.skew:
-            self.interrupt("sources_not_aligned")
-            return False
+        if self.require_fresh_reports:
+            if any(now - stamp > 300 or stamp > now + 1 for stamp in times.values()):
+                self.interrupt("stale_source")
+                return False
+            if max(times.values()) - min(times.values()) > self.skew:
+                self.interrupt("sources_not_aligned")
+                return False
+        else:
+            # HA integrations may publish cumulative counters only on change.
+            # Sample available numeric states together; no missing source is
+            # replaced. These are snapshots, not synchronized source reports.
+            times = dict.fromkeys(self.required, now)
         if self.baseline is not None:
             elapsed = now - self.frame_time
             if elapsed <= 0:
