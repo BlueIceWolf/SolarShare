@@ -30,8 +30,11 @@ def strings(value):
 class SiteLedger:
     """Only complete source frames can affect apartments; missing data is not zero."""
 
-    def __init__(self, apartment_ids, *, battery=False, capacity=10, max_power=100, skew=60):
+    def __init__(
+        self, apartment_ids, *, battery=False, capacity=10, max_power=100, skew=60, pv_keys=("pv",)
+    ):
         self.apartment_ids = tuple(apartment_ids)
+        self.pv_keys = tuple(pv_keys)
         self.battery = battery
         self.capacity = Decimal(str(capacity))
         self.max_power = Decimal(str(max_power))
@@ -51,7 +54,7 @@ class SiteLedger:
     @property
     def required(self):
         return (
-            "pv",
+            *self.pv_keys,
             "import",
             "export",
             *(("charge", "discharge") if self.battery else ()),
@@ -147,6 +150,13 @@ class SiteLedger:
         if any(value < 0 or value > limit for value in deltas.values()):
             self.review = True
             self.interrupt("meter_reset_or_implausible_jump")
+            return False
+        # Validate each inverter/string first. Summing raw counters before this
+        # point could hide one source's reset behind another source's increase.
+        deltas["pv"] = sum((deltas[key] for key in self.pv_keys), ZERO)
+        if deltas["pv"] > limit:
+            self.review = True
+            self.interrupt("implausible_total_pv_jump")
             return False
         try:
             allocation, site, pools = self.allocate(deltas)

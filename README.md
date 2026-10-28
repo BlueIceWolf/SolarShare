@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.0** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.2.1** ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -61,6 +61,40 @@ Quellen müssen Gerätekategorie `energy`, Zustandsklasse `total` oder
 Zähler, Leistungssensoren oder SolarShare-Ausgabesensoren auswählen. Alle Werte
 müssen dieselbe AC-Bilanzgrenze abbilden. Die Integration liest die ausgewählten
 Home-Assistant-Entitäten; Hardware muss über ihre jeweilige Integration eingebunden sein.
+
+## Mehrere Wechselrichter und Stringzähler
+
+Unter **PV-Energiequellen** lassen sich mehrere Sensoren auswählen. SolarShare
+zeigt die Einzelzähler und einen gemeinsamen PV-Gesamtzählerstand an und berechnet
+die gesamte PV-Energie aus den einzelnen Zuwächsen. Ein Ausfall oder Reset eines
+einzigen Zählers wird nicht hinter den anderen Quellen versteckt. Dafür sind keine
+Summenhelfer nötig. Bestehende Zuordnungen mit nur einem PV-Zähler bleiben gültig.
+
+Zusätzlich gibt es **PV-Details / Strings (nur Erfassung)**. Hier können DC-Stringzähler
+wie `sensor.growatt_mod_4000_tl_3_total_pv2_solar_energy` separat zugeordnet werden,
+während die AC-Ausgangszähler der Wechselrichter die Gebäudebilanz speisen. Die
+Detailzähler erhalten eigene Entitäten und fließen nicht nochmals in die PV-Summe,
+Autarkie oder Wohnungsverteilung ein. Ein fehlender Detailzähler unterbricht die
+AC-Berechnung nicht. Ohne vollständige AC-Quellen bleibt die Verteilung angehalten.
+
+Bei Growatt-Modbus gibt es getrennte Definitionen für `Total PV2 Solar Energy` und
+`Total Power Generation`; welcher AC-Gesamtsensor am konkreten Gerät verfügbar ist,
+muss anhand der verwendeten Integration und des Modells geprüft werden:
+[Growatt-Sensordefinitionen](https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_growatt.py).
+
+Jede erzeugte Energiemenge darf nur einmal enthalten sein: entweder den Gesamtwert
+eines Wechselrichters auswählen oder dessen vollständige, voneinander getrennte
+Teilwerte. **WR-Gesamtwert plus dessen Strings würde doppelt zählen.** Die Integration
+kann diese physische Überschneidung anhand unterschiedlicher Entitäts-IDs nicht
+automatisch erkennen.
+
+Bei **Messseite der PV-Quellen** AC, DC oder Unklar wählen. AC-Werte am Ausgang
+unabhängiger Wechselrichter können direkt für die Gebäudebilanz summiert werden.
+DC-Stringenergie liegt vor der Umwandlung; sie darf wegen Verlusten und möglicher
+DC-Batterieflüsse nicht unverändert als AC-Erzeugung verrechnet werden. Bei DC oder
+Unklar sind Einzel-/Summenstände sichtbar, die Wohnungsverteilung bleibt mit Status
+`pv_measurement_boundary_unclear` angehalten. Es wird kein pauschaler Wirkungsgrad
+erfunden. AC- und DC-Werte nicht in einer gemeinsamen Summe mischen.
 
 ## Automatisch angelegte Datenpunkte
 

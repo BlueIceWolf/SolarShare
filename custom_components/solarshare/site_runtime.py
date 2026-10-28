@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .accounting import energy_kwh
 from .const import DOMAIN
+from .pv_sources import source_meters, total_pv
 from .site_accounting import SiteLedger
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,16 +28,22 @@ class SiteRuntime:
         self.config = {**entry.data, **entry.options}
         self.options = dict(entry.options)
         self.signal = f"{DOMAIN}_{entry.entry_id}"
-        self.meters = {key: value for key, value in self.config["sources"].items() if value}
+        self.meters = source_meters(self.config["sources"])
+        self.pv_keys = tuple(key for key in self.meters if key == "pv" or key.startswith("pv:"))
         self.apartments = self.config["apartments"]
         active = [item for item in self.apartments if not item.get("paused")]
         self.meters.update({f"apt:{item['id']}": item["meter"] for item in active})
+        self.accounting_keys = set(self.meters)
+        self.meters.update(
+            {f"pv_detail:{entity_id}": entity_id for entity_id in self.config.get("pv_details", [])}
+        )
         self.ledger = SiteLedger(
             [item["id"] for item in active],
             battery=bool(self.meters.get("charge")),
             capacity=self.config.get("battery_capacity", 10),
             max_power=self.config.get("max_power_kw", 100),
             skew=self.config.get("alignment_seconds", 60),
+            pv_keys=self.pv_keys,
         )
         self.store = Store(hass, 1, f"{DOMAIN}.site.{entry.entry_id}", atomic_writes=True)
         self.identities = {}
@@ -47,6 +54,7 @@ class SiteRuntime:
         self.storage_failed = False
         self.legacy_total = None
         self.readings = {}
+        self.reading_times = {}
 
     async def async_load(self):
         try:
@@ -108,10 +116,15 @@ class SiteRuntime:
             state is None
             or energy_kwh(state.state, state.attributes.get("unit_of_measurement")) is None
         ):
+            affects_accounting = False
             for key, entity_id in self.meters.items():
                 if entity_id == event.data["entity_id"]:
                     self.readings[key] = None
-            self.ledger.interrupt("source_unavailable")
+                    affects_accounting |= key in self.accounting_keys
+                    if key in self.pv_keys:
+                        self.readings["pv"] = None
+            if affects_accounting:
+                self.ledger.interrupt("source_unavailable")
             async_dispatcher_send(self.hass, self.signal)
 
     @callback
@@ -136,7 +149,11 @@ class SiteRuntime:
                     if source
                     else [entity_id]
                 )
-                if key in self.identities and self.identities[key] != identity:
+                if (
+                    key in self.accounting_keys
+                    and key in self.identities
+                    and self.identities[key] != identity
+                ):
                     self.ledger.review = True
                 self.identities[key] = identity
                 state = self.hass.states.get(entity_id)
@@ -151,8 +168,17 @@ class SiteRuntime:
                         state.state, state.attributes.get("unit_of_measurement")
                     )
                     timestamps[key] = state.last_reported.timestamp()
+            readings["pv"] = total_pv(readings, self.pv_keys)
+            if all(key in timestamps for key in self.pv_keys):
+                timestamps["pv"] = min(timestamps[key] for key in self.pv_keys)
+            else:
+                timestamps.pop("pv", None)
             self.readings = readings
-            self.ledger.observe(readings, timestamps, now, dt_util.now().date().isoformat())
+            self.reading_times = timestamps
+            if self.config.get("pv_measurement", "ac") == "ac":
+                self.ledger.observe(readings, timestamps, now, dt_util.now().date().isoformat())
+            else:
+                self.ledger.interrupt("pv_measurement_boundary_unclear")
             try:
                 await self._save()
             except Exception:

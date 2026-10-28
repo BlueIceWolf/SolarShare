@@ -10,13 +10,16 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
+from .pv_sources import pv_entities, source_entities
 
 ROLES = ("pv", "import", "export", "charge", "discharge")
 
 
-def energy_selector():
+def energy_selector(multiple=False):
     return selector.EntitySelector(
-        selector.EntitySelectorConfig(filter={"domain": "sensor", "device_class": "energy"})
+        selector.EntitySelectorConfig(
+            filter={"domain": "sensor", "device_class": "energy"}, multiple=multiple
+        )
     )
 
 
@@ -47,11 +50,17 @@ def validate_config(hass, config, entry_id=None):
         return "apartment_required"
     if any(not item["name"].strip() for item in config["apartments"]):
         return "empty_name"
-    meters = [value for value in sources.values() if value]
+    meters = source_entities(sources)
     meters += [item["meter"] for item in config["apartments"] if not item.get("paused")]
     if len(meters) != len(set(meters)):
         return "duplicate_meter"
     for meter in meters:
+        if error := validate_source(hass, meter):
+            return error
+    details = pv_entities(config.get("pv_details"))
+    if len(details) != len(set(details)):
+        return "duplicate_meter"
+    for meter in details:
         if error := validate_source(hass, meter):
             return error
     for entry in hass.config_entries.async_entries(DOMAIN):
@@ -78,6 +87,8 @@ class InstallationWizard:
                     "alignment_seconds": 60,
                     "battery_capacity": 10,
                     "revision": uuid4().hex,
+                    "pv_measurement": "ac" if old.get("sources") else "unknown",
+                    "pv_details": [],
                 }.items()
             }
         )
@@ -96,29 +107,47 @@ class InstallationWizard:
         self.pending_error = None
         if user_input is not None:
             sources = {key: user_input.get(key, "") for key in ROLES}
+            sources["pv"] = pv_entities(sources["pv"])
             if not user_input["name"].strip():
                 errors["name"] = "empty_name"
             elif bool(sources["charge"]) != bool(sources["discharge"]):
                 errors["base"] = "battery_pair"
             else:
-                used = [meter for meter in sources.values() if meter]
+                used = source_entities(sources)
                 if len(used) != len(set(used)):
                     errors["base"] = "duplicate_meter"
-                for key, meter in sources.items():
-                    if meter and (error := validate_source(self.hass, meter)):
-                        errors[key] = error
+                for key, value in sources.items():
+                    for meter in pv_entities(value):
+                        if error := validate_source(self.hass, meter):
+                            errors[key] = error
+                for meter in pv_entities(user_input.get("pv_details")):
+                    if error := validate_source(self.hass, meter):
+                        errors["pv_details"] = error
             if not errors:
                 self.site.update(
                     {key: value for key, value in user_input.items() if key not in ROLES}
                 )
                 self.site["sources"] = sources
+                self.site["pv_details"] = pv_entities(user_input.get("pv_details"))
                 return await self.async_step_apartments()
         defaults = user_input or {**self.site, **self.site["sources"]}
         fields = {probatio.Required("name", default=defaults.get("name", "SolarShare")): str}
         for key in ROLES:
             field = probatio.Required if key in ("pv", "import", "export") else probatio.Optional
             kwargs = {"default": defaults[key]} if defaults.get(key) else {}
-            fields[field(key, **kwargs)] = energy_selector()
+            if key == "pv" and kwargs:
+                kwargs["default"] = pv_entities(kwargs["default"])
+            fields[field(key, **kwargs)] = energy_selector(multiple=key == "pv")
+        fields[
+            probatio.Required(
+                "pv_measurement",
+                default=defaults.get("pv_measurement", self.site["pv_measurement"]),
+            )
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=["ac", "dc", "unknown"], translation_key="pv_measurement"
+            )
+        )
         for key, lower, upper, step in (
             ("max_power_kw", 1, 1000, 1),
             ("alignment_seconds", 1, 120, 1),
@@ -130,6 +159,16 @@ class InstallationWizard:
                 )
             )
         fields[probatio.Optional("acknowledge", default=False)] = bool
+        fields[
+            probatio.Optional(
+                "pv_details",
+                **(
+                    {"default": pv_entities(defaults["pv_details"])}
+                    if defaults.get("pv_details")
+                    else {}
+                ),
+            )
+        ] = energy_selector(multiple=True)
         return self.async_show_form(
             step_id="installation", data_schema=probatio.Schema(fields), errors=errors
         )
@@ -193,7 +232,7 @@ class InstallationWizard:
             elif error := validate_source(self.hass, data["meter"]):
                 errors["meter"] = error
             elif not data["paused"] and (
-                data["meter"] in self.site["sources"].values()
+                data["meter"] in source_entities(self.site["sources"])
                 or any(
                     item["id"] != data["id"]
                     and not item.get("paused")
@@ -242,6 +281,7 @@ class InstallationWizard:
             if (
                 acknowledge
                 or data["sources"] != old.get("sources")
+                or data.get("pv_measurement") != old.get("pv_measurement", "ac")
                 or sorted((a["id"], a["meter"], a.get("paused", False)) for a in data["apartments"])
                 != sorted(
                     (a["id"], a["meter"], a.get("paused", False)) for a in old.get("apartments", [])

@@ -13,10 +13,10 @@
       },
       "installation": {
         "title": "Configure SolarShare installation",
-        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated.",
+        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated. Independent inverter outputs are summed internally. Never select both an inverter total and its string/component readings. DC or unclassified sources are monitored only; apartment AC allocation requires confirmed AC sources. Additional DC string counters can be recorded separately as PV details; they are not added to the AC balance.",
         "data": {
           "name": "Installation name",
-          "pv": "PV production (AC energy meter)",
+          "pv": "PV energy sources (select multiple)",
           "import": "Grid import (energy meter)",
           "export": "Grid export (energy meter)",
           "charge": "Battery charge AC (optional)",
@@ -24,7 +24,9 @@
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+          "acknowledge": "Sources checked: clear review hold and establish new baselines",
+          "pv_measurement": "Measurement boundary of selected PV sources",
+          "pv_details": "PV details / strings (monitoring only, optional)"
         }
       },
       "apartments": {
@@ -85,10 +87,10 @@
       },
       "installation": {
         "title": "Configure SolarShare installation",
-        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated.",
+        "description": "Map building sources once, then add every apartment. Devices and consumption, solar/grid/battery, self-sufficiency and daily/monthly/yearly sensors are created automatically. Use cumulative Wh/kWh/MWh counters at the same AC measurement boundary, not power sensors. Allocation is proportional per observed interval; gaps are not estimated. Independent inverter outputs are summed internally. Never select both an inverter total and its string/component readings. DC or unclassified sources are monitored only; apartment AC allocation requires confirmed AC sources. Additional DC string counters can be recorded separately as PV details; they are not added to the AC balance.",
         "data": {
           "name": "Installation name",
-          "pv": "PV production (AC energy meter)",
+          "pv": "PV energy sources (select multiple)",
           "import": "Grid import (energy meter)",
           "export": "Grid export (energy meter)",
           "charge": "Battery charge AC (optional)",
@@ -96,7 +98,9 @@
           "max_power_kw": "Maximum plausible site load (kW)",
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "battery_capacity": "Usable battery capacity (kWh; ignored without battery)",
-          "acknowledge": "Sources checked: clear review hold and establish new baselines"
+          "acknowledge": "Sources checked: clear review hold and establish new baselines",
+          "pv_measurement": "Measurement boundary of selected PV sources",
+          "pv_details": "PV details / strings (monitoring only, optional)"
         }
       },
       "apartments": {
@@ -137,6 +141,15 @@
       "apartment_required": "Add at least one apartment.",
       "missing_sources": "Select PV production, grid import and grid export meters.",
       "single_site": "An installation already exists. Add apartments in its configuration."
+    }
+  },
+  "selectors": {
+    "pv_measurement": {
+      "options": {
+        "ac": "AC: inverter output",
+        "dc": "DC: string / before inverter – monitoring only",
+        "unknown": "Unknown – monitoring only"
+      }
     }
   }
 }

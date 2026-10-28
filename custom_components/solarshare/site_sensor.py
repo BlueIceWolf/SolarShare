@@ -1,5 +1,6 @@
 """Site and apartment devices with automatically created energy/ratio points."""
 
+import time
 from decimal import Decimal
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
@@ -46,6 +47,8 @@ def entities(entry):
                 result.append(EnergyPoint(entry, metric, period, apartment))
     for key in runtime.meters:
         result.append(SourceReading(entry, key))
+    if "pv" not in runtime.meters:
+        result.append(SourceReading(entry, "pv"))
     for apartment in runtime.apartments:
         result.append(AveragePower(entry, apartment))
     if runtime.legacy_total is not None:
@@ -85,6 +88,7 @@ class SiteEntity(SensorEntity):
             "allocation_method": "aligned_interval_proportional_pv_first",
             "origin_model": "virtual_battery_inventory_95_percent_efficiency",
             "accounting_scope": "complete_observed_intervals_only",
+            "pv_measurement": self.runtime.config.get("pv_measurement", "ac"),
         }
 
 
@@ -174,7 +178,17 @@ class SourceReading(SiteEntity):
         apartment = next(
             (a for a in entry.runtime_data.apartments if key == f"apt:{a['id']}"), None
         )
-        label = "Zählerstand" if apartment else f"Zählerstand {SITE_METRICS[key][0]}"
+        label = (
+            "Zählerstand"
+            if apartment
+            else (
+                f"PV-Quellzähler {entry.runtime_data.meters[key]}"
+                if key.startswith(("pv:", "pv_detail:"))
+                else (
+                    "PV-Gesamtzählerstand" if key == "pv" else f"Zählerstand {SITE_METRICS[key][0]}"
+                )
+            )
+        )
         super().__init__(entry, f"source_{key}", label, apartment)
 
     @property
@@ -183,9 +197,12 @@ class SourceReading(SiteEntity):
 
     @property
     def available(self):
+        stamp = self.runtime.reading_times.get(self.key)
         return (
             self.runtime.ledger.reason not in ("stale_source", "storage_error", "stopped")
             and self.native_value is not None
+            and stamp is not None
+            and -1 <= time.time() - stamp <= 300
         )
 
 

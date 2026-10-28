@@ -57,7 +57,7 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         result = await flow.async_step_finish()
         self.assertEqual(result["type"], "create_entry")
         self.assertEqual(len(result["data"]["apartments"]), 2)
-        self.assertEqual(result["data"]["sources"]["pv"], "sensor.pv")
+        self.assertEqual(result["data"]["sources"]["pv"], ["sensor.pv"])
 
     async def test_duplicate_meter_and_unpaired_battery_rejected(self):
         flow = await self.configured_flow()
@@ -124,3 +124,18 @@ class InstallationTests(unittest.IsolatedAsyncioTestCase):
         await flow.async_step_select_apartment({"apartment_id": original})
         await flow.async_step_apartment({"name": "Umbenannt", "meter": "sensor.a"})
         self.assertIn(original, [item["id"] for item in flow.site["apartments"]])
+
+    async def test_monitoring_string_does_not_join_building_balance(self):
+        flow = await self.configured_flow()
+        config = (await flow.async_step_finish())["data"]
+        config["pv_details"] = ["sensor.string2"]
+        entry = SimpleNamespace(entry_id="site", data=config, options={})
+        runtime = SiteRuntime(self.hass, entry)
+        detail_key = "pv_detail:sensor.string2"
+        self.assertIn(detail_key, runtime.meters)
+        self.assertNotIn(detail_key, runtime.ledger.required)
+        self.assertNotIn(detail_key, runtime.accounting_keys)
+        runtime.active = True
+        runtime.ledger.available = True
+        runtime._changed(SimpleNamespace(data={"entity_id": "sensor.string2", "new_state": None}))
+        self.assertTrue(runtime.ledger.available)

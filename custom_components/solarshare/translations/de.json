@@ -13,10 +13,10 @@
       },
       "installation": {
         "title": "SolarShare-Anlage einrichten",
-        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt.",
+        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt. Mehrere unabhängige Wechselrichter-Ausgänge werden intern addiert. Niemals WR-Gesamtwert und dessen String-/Teilwerte gemeinsam auswählen. DC- oder unklare Quellen werden nur erfasst; eine AC-Wohnungsverteilung startet erst bei bestätigten AC-Quellen. Zusätzliche DC-Stringzähler können getrennt unter PV-Details erfasst werden; sie werden nicht zusätzlich in die AC-Bilanz eingerechnet.",
         "data": {
           "name": "Name der Anlage",
-          "pv": "PV-Erzeugung (AC-Energiezähler)",
+          "pv": "PV-Energiequellen (Mehrfachauswahl)",
           "import": "Netzbezug (Energiezähler)",
           "export": "Einspeisung (Energiezähler)",
           "charge": "Batterieladung AC (optional)",
@@ -24,7 +24,9 @@
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
+          "pv_measurement": "Messseite der gewählten PV-Quellen",
+          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
         }
       },
       "apartments": {
@@ -85,10 +87,10 @@
       },
       "installation": {
         "title": "SolarShare-Anlage einrichten",
-        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt.",
+        "description": "Einmal die Quellen des gesamten Gebäudes zuordnen, danach alle Wohnungen hinzufügen. Es werden automatisch Geräte mit Verbrauch, Solar-/Netz-/Batterieanteil, Autarkie sowie Tages-, Monats- und Jahreswerten angelegt. Kumulative Zähler in Wh/kWh/MWh verwenden, keine Leistungssensoren. Alle Quellen müssen dieselbe AC-Messgrenze abbilden. Die Verteilung erfolgt proportional je beobachtetem Intervall; Datenlücken werden nicht geschätzt. Mehrere unabhängige Wechselrichter-Ausgänge werden intern addiert. Niemals WR-Gesamtwert und dessen String-/Teilwerte gemeinsam auswählen. DC- oder unklare Quellen werden nur erfasst; eine AC-Wohnungsverteilung startet erst bei bestätigten AC-Quellen. Zusätzliche DC-Stringzähler können getrennt unter PV-Details erfasst werden; sie werden nicht zusätzlich in die AC-Bilanz eingerechnet.",
         "data": {
           "name": "Name der Anlage",
-          "pv": "PV-Erzeugung (AC-Energiezähler)",
+          "pv": "PV-Energiequellen (Mehrfachauswahl)",
           "import": "Netzbezug (Energiezähler)",
           "export": "Einspeisung (Energiezähler)",
           "charge": "Batterieladung AC (optional)",
@@ -96,7 +98,9 @@
           "max_power_kw": "Maximale plausible Anlagenleistung (kW)",
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "battery_capacity": "Nutzbare Batteriekapazität (kWh; ohne Batterie ignoriert)",
-          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen"
+          "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
+          "pv_measurement": "Messseite der gewählten PV-Quellen",
+          "pv_details": "PV-Details / Strings (nur Erfassung, optional)"
         }
       },
       "apartments": {
@@ -137,6 +141,15 @@
       "apartment_required": "Mindestens eine Wohnung hinzufügen.",
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
+    }
+  },
+  "selectors": {
+    "pv_measurement": {
+      "options": {
+        "ac": "AC: Wechselrichter-Ausgang",
+        "dc": "DC: String / vor Wechselrichter – nur Erfassung",
+        "unknown": "Unklar – nur Erfassung"
+      }
     }
   }
 }
