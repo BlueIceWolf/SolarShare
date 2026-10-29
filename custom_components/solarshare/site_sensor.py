@@ -53,6 +53,7 @@ def entities(entry):
         result.append(SourceReading(entry, "pv"))
     for apartment in runtime.units:
         result.append(AveragePower(entry, apartment))
+        result.append(LiveUnitAutarkyPoint(entry, apartment))
     if runtime.legacy_total is not None:
         result.append(LegacyArchive(entry))
     return result
@@ -131,6 +132,41 @@ class LiveAutarkyPoint(SiteEntity):
             "status": "live",
             "accounting_scope": "display_only_not_billable",
             "battery_origin": "not_tracked_in_live_percentage",
+        }
+
+
+class LiveUnitAutarkyPoint(SiteEntity):
+    """Proportional share of current shared building power, display-only."""
+
+    _attr_icon = "mdi:home-percent-outline"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, entry, unit):
+        self.unit = unit
+        super().__init__(
+            entry, f"{unit['id']}_live_autarky",
+            "Autarkie Live (anteilig)", unit,
+        )
+
+    @property
+    def native_value(self):
+        values = self.runtime.live_unit_metrics(self.unit)
+        return values["autarky"] if values else None
+
+    @property
+    def available(self):
+        return self.runtime.live_unit_metrics(self.unit) is not None
+
+    @property
+    def extra_state_attributes(self):
+        values = self.runtime.live_unit_metrics(self.unit)
+        if values:
+            return {**values, "status": "live"}
+        return {
+            "status": "power_meter_missing_or_stale",
+            "configured": bool(self.unit.get("power")),
+            "accounting_scope": "display_only_not_billable",
         }
 
 
