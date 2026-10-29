@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from .accounting import energy_kwh
 from .const import DOMAIN
 from .observed_consumption import ObservedConsumption
+from .tariff_accounting import TariffLedger
 from .pv_night import PVNight
 from .pv_sources import overlapping_growatt_totals, source_meters, total_pv
 from .site_accounting import SiteLedger
@@ -43,6 +44,7 @@ class SiteRuntime:
             {f"pv_detail:{entity_id}": entity_id for entity_id in self.config.get("pv_details", [])}
         )
         self.observed = ObservedConsumption(self.config.get("max_power_kw", 100))
+        self.tariff_ledger = TariffLedger()
         self.ledger = SiteLedger(
             [item["id"] for item in active],
             battery=bool(self.meters.get("charge")),
@@ -73,6 +75,7 @@ class SiteRuntime:
             if data:
                 self.ledger.restore(data["ledger"])
                 self.observed.restore(data.get("observed_consumption"))
+                self.tariff_ledger.restore(data.get("tariff_ledger"))
                 self.identities = data["identities"]
                 self.legacy_total = data.get("legacy_total")
                 self.night.restore(data.get("last_pv_readings"))
@@ -97,6 +100,7 @@ class SiteRuntime:
             {
                 "ledger": self.ledger.snapshot(),
                 "observed_consumption": self.observed.snapshot(),
+                "tariff_ledger": self.tariff_ledger.snapshot(),
                 "revision": self.config["revision"],
                 "identities": self.identities,
                 "legacy_total": self.legacy_total,
@@ -236,9 +240,14 @@ class SiteRuntime:
             if overlapping_growatt_totals(self.config["sources"].get("pv")):
                 self.ledger.interrupt("overlapping_pv_sources")
             elif self.config.get("pv_measurement", "ac") == "ac":
-                self.ledger.observe(
+                allocated = self.ledger.observe(
                     effective, effective_times, now, today
                 )
+                if allocated:
+                    self.tariff_ledger.record(
+                        self.ledger.interval["apartments"], today,
+                        self.config.get("tariffs", {}),
+                    )
                 if self.ledger.reason == "observing" and self.night.sleeping:
                     self.ledger.reason = "observing_pv_night"
             else:
