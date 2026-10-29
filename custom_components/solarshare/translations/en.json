@@ -110,7 +110,8 @@
           "advanced": "Advanced settings",
           "finish": "Summary",
           "wallboxes": "Wallboxes",
-          "tariffs": "Electricity tariffs"
+          "tariffs": "Electricity tariffs",
+          "live_power": "Live power"
         }
       },
       "finish": {
@@ -167,6 +168,18 @@
         "data": {
           "solar": "Solar electricity (EUR/kWh)",
           "grid": "Grid electricity (EUR/kWh)"
+        }
+      },
+      "live_power": {
+        "title": "Live power / self-sufficiency",
+        "description": "**Option A:** Building load and positive grid import power. **Option B:** PV power (multiple inverters allowed), import and export power, plus charge/discharge power when a battery is present. Use nonnegative power sensors (W/kW), not signed net grid power. Missing or stale values will never be guessed. Live percentage means grid independence, not proven battery solar origin.",
+        "data": {
+          "load": "Building consumption (W)",
+          "import": "Grid import (W)",
+          "pv": "PV power from inverters (W)",
+          "export": "Grid export (W)",
+          "charge": "Battery charging (W)",
+          "discharge": "Battery discharging (W)"
         }
       }
     },
@@ -300,7 +313,8 @@
           "advanced": "Advanced settings",
           "finish": "Summary",
           "wallboxes": "Wallboxes",
-          "tariffs": "Electricity tariffs"
+          "tariffs": "Electricity tariffs",
+          "live_power": "Live power"
         }
       },
       "finish": {
@@ -357,6 +371,18 @@
         "data": {
           "solar": "Solar electricity (EUR/kWh)",
           "grid": "Grid electricity (EUR/kWh)"
+        }
+      },
+      "live_power": {
+        "title": "Live power / self-sufficiency",
+        "description": "**Option A:** Building load and positive grid import power. **Option B:** PV power (multiple inverters allowed), import and export power, plus charge/discharge power when a battery is present. Use nonnegative power sensors (W/kW), not signed net grid power. Missing or stale values will never be guessed. Live percentage means grid independence, not proven battery solar origin.",
+        "data": {
+          "load": "Building consumption (W)",
+          "import": "Grid import (W)",
+          "pv": "PV power from inverters (W)",
+          "export": "Grid export (W)",
+          "charge": "Battery charging (W)",
+          "discharge": "Battery discharging (W)"
         }
       }
     },
