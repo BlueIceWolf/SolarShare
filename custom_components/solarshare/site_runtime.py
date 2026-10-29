@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .accounting import energy_kwh
 from .const import DOMAIN
+from .observed_consumption import ObservedConsumption
 from .pv_night import PVNight
 from .pv_sources import overlapping_growatt_totals, source_meters, total_pv
 from .site_accounting import SiteLedger
@@ -41,6 +42,7 @@ class SiteRuntime:
         self.meters.update(
             {f"pv_detail:{entity_id}": entity_id for entity_id in self.config.get("pv_details", [])}
         )
+        self.observed = ObservedConsumption(self.config.get("max_power_kw", 100))
         self.ledger = SiteLedger(
             [item["id"] for item in active],
             battery=bool(self.meters.get("charge")),
@@ -70,6 +72,7 @@ class SiteRuntime:
                 raise ValueError("Previously initialized site ledger is missing")
             if data:
                 self.ledger.restore(data["ledger"])
+                self.observed.restore(data.get("observed_consumption"))
                 self.identities = data["identities"]
                 self.legacy_total = data.get("legacy_total")
                 self.night.restore(data.get("last_pv_readings"))
@@ -93,6 +96,7 @@ class SiteRuntime:
         await self.store.async_save(
             {
                 "ledger": self.ledger.snapshot(),
+                "observed_consumption": self.observed.snapshot(),
                 "revision": self.config["revision"],
                 "identities": self.identities,
                 "legacy_total": self.legacy_total,
@@ -187,6 +191,8 @@ class SiteRuntime:
                     and self.identities[key] != identity
                 ):
                     self.ledger.review = True
+                    if key.startswith("apt:"):
+                        self.observed.invalidate(key[4:])
                 self.identities[key] = identity
                 state = self.hass.states.get(entity_id)
                 self.source_states[key] = state.state if state is not None else "missing"
@@ -214,6 +220,14 @@ class SiteRuntime:
                 timestamps.pop("pv", None)
             self.readings = readings
             self.reading_times = timestamps
+            # Metered consumer usage remains available when the site PV/grid
+            # balance cannot be resolved. Unobserved gaps are never filled in.
+            today = dt_util.now().date().isoformat()
+            for unit in self.units:
+                if not unit.get("paused"):
+                    self.observed.observe(
+                        unit["id"], readings.get(f"apt:{unit['id']}"), now, today
+                    )
             effective, effective_times, transition = self.night.apply(
                 readings, timestamps, now, self._sun_state(), eligible_night_pv
             )
@@ -223,7 +237,7 @@ class SiteRuntime:
                 self.ledger.interrupt("overlapping_pv_sources")
             elif self.config.get("pv_measurement", "ac") == "ac":
                 self.ledger.observe(
-                    effective, effective_times, now, dt_util.now().date().isoformat()
+                    effective, effective_times, now, today
                 )
                 if self.ledger.reason == "observing" and self.night.sleeping:
                     self.ledger.reason = "observing_pv_night"
