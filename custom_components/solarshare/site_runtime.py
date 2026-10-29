@@ -43,6 +43,9 @@ class SiteRuntime:
         self.apartments = self.config["apartments"]
         self.wallboxes = self.config.get("wallboxes", [])
         self.units = [*self.apartments, *self.wallboxes]
+        self.live_power_ids.extend(
+            unit["power"] for unit in self.units if unit.get("power") and not unit.get("paused")
+        )
         active = [item for item in self.units if not item.get("paused")]
         self.meters.update({f"apt:{item['id']}": item["meter"] for item in active})
         self.accounting_keys = set(self.meters)
@@ -217,6 +220,61 @@ class SiteRuntime:
             if values:
                 power[role] = sum(values)
         return live_autarky(power, battery=self.ledger.battery)
+
+    def live_unit_metrics(self, unit):
+        """Display-only proportional allocation of current building power.
+
+        A shared electricity source gives all participating units the same
+        percentage, but different allocated watts. This is never a billing
+        quantity and does not claim to track physical electron origin.
+        """
+        if unit.get("paused") or not unit.get("power"):
+            return None
+        site = self.live_metrics()
+        if not site or site["load_w"] <= 0:
+            return None
+        power = self._live_unit_power(unit)
+        if power is None or power > site["load_w"] + max(50, site["load_w"] * 0.05):
+            return None
+        # If every independently measured consumer has a power reading,
+        # catch accidentally overlapping/duplicated unit sensors.
+        other_values = [self._live_unit_power(item) for item in self.units
+                        if item.get("power") and not item.get("paused")]
+        if other_values and all(value is not None for value in other_values):
+            if sum(other_values) > site["load_w"] + max(50, site["load_w"] * 0.05):
+                return None
+        share = site["autarky"] / 100
+        return {
+            "autarky": site["autarky"],
+            "power_w": round(power, 1),
+            "local_w": round(power * share, 1),
+            "grid_w": round(power * (1 - share), 1),
+            "method": "proportional_shared_site_power",
+            "accounting_scope": "display_only_not_billable",
+        }
+
+    def _live_unit_power(self, unit):
+        entity_id = unit.get("power")
+        if not entity_id:
+            return None
+        state = self.hass.states.get(entity_id)
+        if (state is None or state.state in ("unknown", "unavailable")
+                or state.attributes.get("restored")):
+            return None
+        stamp = getattr(state, "last_reported", None)
+        now = time.time()
+        if stamp is None or not 0 <= now - stamp.timestamp() <= 300:
+            return None
+        if (state.attributes.get("device_class") != "power"
+                or state.attributes.get("unit_of_measurement") not in ("W", "kW")):
+            return None
+        try:
+            value = float(state.state) * (
+                1000 if state.attributes.get("unit_of_measurement") == "kW" else 1
+            )
+        except (ValueError, TypeError):
+            return None
+        return value if 0 <= value <= 1000000 and value == value else None
 
     def _sun_state(self):
         sun = self.hass.states.get("sun.sun")
