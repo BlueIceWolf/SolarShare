@@ -33,7 +33,9 @@ class SiteRuntime:
         self.pv_keys = tuple(key for key in self.meters if key == "pv" or key.startswith("pv:"))
         self.night = PVNight(self.pv_keys, enabled=self.config.get("pv_night_sleep", True))
         self.apartments = self.config["apartments"]
-        active = [item for item in self.apartments if not item.get("paused")]
+        self.wallboxes = self.config.get("wallboxes", [])
+        self.units = [*self.apartments, *self.wallboxes]
+        active = [item for item in self.units if not item.get("paused")]
         self.meters.update({f"apt:{item['id']}": item["meter"] for item in active})
         self.accounting_keys = set(self.meters)
         self.meters.update(
