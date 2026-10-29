@@ -93,7 +93,8 @@
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "acknowledge": "Sources checked: clear review hold and establish new baselines",
           "require_fresh_reports": "Strict freshness: require regular reports from every meter",
-          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters"
+          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters",
+          "balance_tolerance_kwh": "Meter balance tolerance (kWh)"
         }
       },
       "site_menu": {
@@ -282,7 +283,8 @@
           "alignment_seconds": "Maximum meter report skew (seconds)",
           "acknowledge": "Sources checked: clear review hold and establish new baselines",
           "require_fresh_reports": "Strict freshness: require regular reports from every meter",
-          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters"
+          "pv_night_sleep": "PV inverters sleep at night: assume zero generation for missing night-time PV counters",
+          "balance_tolerance_kwh": "Meter balance tolerance (kWh)"
         }
       },
       "site_menu": {
