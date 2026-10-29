@@ -257,11 +257,10 @@ class EnergyPoint(SiteEntity):
 
     @property
     def available(self):
-        return (
-            self.runtime.ledger.available
-            and not (self.apartment or {}).get("paused")
-            and self.native_value is not None
-        )
+        # Persisted, successfully allocated totals remain valid while the next
+        # source interval is still gathering after restart or a brief outage.
+        # Do not mistake the absence of a new allocation for lost history.
+        return not (self.apartment or {}).get("paused") and self.native_value is not None
 
 
 class SiteStatus(SiteEntity):
