@@ -6,7 +6,7 @@ from decimal import Decimal
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
