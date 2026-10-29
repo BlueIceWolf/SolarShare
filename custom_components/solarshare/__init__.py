@@ -1,19 +1,43 @@
 """SolarShare apartment energy monitoring."""
 
-from pathlib import Path
+import logging
 
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, EVENT_HOMEASSISTANT_STARTED, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-
+from .frontend_resources import async_register_card_path, async_register_card_resource
 from .runtime import SolarShareRuntime
 from .site_runtime import SiteRuntime
 
 PLATFORMS = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Expose the bundled card and register it once after Lovelace startup."""
+    try:
+        await async_register_card_path(hass)
+    except Exception:
+        _LOGGER.exception("Cannot serve SolarShare card; energy integration remains usable")
+
+    async def register_resource(_event=None):
+        try:
+            await async_register_card_resource(hass)
+        except Exception:
+            # A resource failure must never prevent metering or modify the ledger.
+            _LOGGER.exception(
+                "Automatic SolarShare card registration failed. Add "
+                "/solarshare/solarshare-card.js manually under Dashboard resources."
+            )
+
+    if hass.state == CoreState.running:
+        await register_resource()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_resource)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -23,17 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await runtime.async_load()
     entry.runtime_data = runtime
     if "sources" in config:
-        # Publish the card once per Home Assistant process; reloading the entry
-        # must not try to register an existing HTTP route again.
-        if not hass.data.get("_solarshare_card_registered"):
-            await hass.http.async_register_static_paths([
-                StaticPathConfig(
-                    "/solarshare/solarshare-card.js",
-                    str(Path(__file__).parent / "www" / "solarshare-card.js"),
-                    False,
-                )
-            ])
-            hass.data["_solarshare_card_registered"] = True
         # Register the parent before adding apartment devices. Home Assistant's
         # via_device_id expects a registry ID, not an identifier tuple.
         site_device = dr.async_get(hass).async_get_or_create(
