@@ -3,6 +3,8 @@
 from copy import deepcopy
 from decimal import Decimal
 
+from .periods import WRITTEN_PERIODS, period_key, retained_period_keys
+
 ZERO = Decimal(0)
 ENERGY_KEYS = ("consumption", "solar", "direct_solar", "grid", "battery", "unknown")
 SITE_KEYS = ("pv", "import", "export", "charge", "discharge", "consumption", "residual")
@@ -125,12 +127,7 @@ class SiteLedger:
 
     @staticmethod
     def period_key(period, day):
-        return {
-            "lifetime": "lifetime",
-            "day": f"day:{day}",
-            "month": f"month:{day[:7]}",
-            "year": f"year:{day[:4]}",
-        }[period]
+        return period_key(period, day)
 
     def observe(self, readings, timestamps, now, day):
         """Process a shared sampling boundary, using receipt freshness and skew limits."""
@@ -228,7 +225,7 @@ class SiteLedger:
         self.pending_seconds = 0
         self.pending_balance = None
         self.pools = pools
-        for period in ("lifetime", "day", "month", "year"):
+        for period in WRITTEN_PERIODS:
             key = self.period_key(period, day)
             bucket = self.periods.setdefault(key, {"site": empty(SITE_KEYS), "apartments": {}})
             for metric, value in site.items():
@@ -238,7 +235,7 @@ class SiteLedger:
                 for metric, value in values.items():
                     target[metric] += value
         # Only current day/month/year counters are needed; lifetime is retained.
-        keep = {self.period_key(period, day) for period in ("lifetime", "day", "month", "year")}
+        keep = retained_period_keys(day)
         self.periods = {key: value for key, value in self.periods.items() if key in keep}
         self.interval = {
             "apartments": allocation,
