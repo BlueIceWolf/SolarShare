@@ -15,6 +15,14 @@ from .pv_sources import overlapping_growatt_totals, pv_entities, source_entities
 ROLES = ("pv", "import", "export", "charge", "discharge")
 
 
+def power_selector(multiple=False):
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(
+            filter={"domain": "sensor", "device_class": "power"}, multiple=multiple
+        )
+    )
+
+
 def energy_selector(multiple=False):
     return selector.EntitySelector(
         selector.EntitySelectorConfig(
@@ -87,6 +95,7 @@ class InstallationWizard:
                     "apartments": [],
                     "wallboxes": [],
                     "tariffs": {},
+                    "live_power": {},
                     "max_power_kw": 100,
                     "alignment_seconds": 60,
                     "battery_capacity": 10,
@@ -389,6 +398,7 @@ class InstallationWizard:
                 "apartments",
                 "wallboxes",
                 "tariffs",
+                "live_power",
                 "pv_details",
                 "advanced",
                 "finish",
@@ -484,6 +494,39 @@ class InstallationWizard:
         )
 
 
+
+    async def async_step_live_power(self, user_input=None):
+        """Optional instantaneous W sensors for honest live site autarky."""
+        self._ensure_config()
+        if user_input is not None:
+            values = {
+                key: value for key, value in user_input.items() if value
+            }
+            assigned = [
+                entity_id for value in values.values()
+                for entity_id in (value if isinstance(value, list) else [value])
+            ]
+            errors = {}
+            if len(assigned) != len(set(assigned)):
+                errors["base"] = "duplicate_meter"
+            for entity_id in assigned:
+                source = er.async_get(self.hass).async_get(entity_id)
+                if source and source.platform == DOMAIN:
+                    errors["base"] = "recursive_meter"
+            if not errors:
+                self.site["live_power"] = values
+                return await self.async_step_site_menu()
+        else:
+            errors = {}
+        current = user_input or self.site.get("live_power", {})
+        fields = {}
+        for key in ("load", "import", "pv", "export", "charge", "discharge"):
+            selection = current.get(key)
+            options = {"default": selection} if selection else {}
+            fields[probatio.Optional(key, **options)] = power_selector(multiple=key == "pv")
+        return self.async_show_form(
+            step_id="live_power", data_schema=probatio.Schema(fields), errors=errors
+        )
 
     async def async_step_tariffs(self, user_input=None):
         """Prices are optional and never applied retroactively to past intervals."""
