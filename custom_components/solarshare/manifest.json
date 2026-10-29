@@ -10,5 +10,12 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/BlueIceWolf/SolarShare/issues",
   "requirements": [],
-  "version": "0.3.0"
+  "version": "0.3.1",
+  "dependencies": [
+    "frontend",
+    "http"
+  ],
+  "after_dependencies": [
+    "lovelace"
+  ]
 }
