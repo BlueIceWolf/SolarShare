@@ -148,6 +148,10 @@ class SiteRuntime:
                 if entity_id == event.data["entity_id"]:
                     self.readings[key] = None
                     self.source_states[key] = state.state if state is not None else "missing"
+                    if key.startswith("apt:"):
+                        # Do not bridge even a brief unavailable meter state
+                        # when it recovers before the next 60-second sample.
+                        self.observed.invalidate(key[4:])
                     night_pv = (
                         key in self.pv_keys
                         and self.night.enabled
