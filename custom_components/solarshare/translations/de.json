@@ -107,12 +107,14 @@
           "apartments": "Wohnungen",
           "pv_details": "String-Details (optional)",
           "advanced": "Erweiterte Einstellungen",
-          "finish": "Zusammenfassung"
+          "finish": "Zusammenfassung",
+          "wallboxes": "Wallboxen",
+          "tariffs": "Strompreise"
         }
       },
       "finish": {
         "title": "6 · Prüfen und speichern",
-        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.",
+        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.\n\n**Wallboxen:**\n{wallboxes}\n\n**Strompreise:** {tariffs}",
         "menu_options": {
           "save": "Speichern",
           "site_menu": "Einstellungen ändern"
@@ -131,6 +133,39 @@
         "title": "Wechselrichter auswählen",
         "data": {
           "inverter_id": "Wechselrichter"
+        }
+      },
+      "wallboxes": {
+        "title": "Wallboxen",
+        "description": "Eigene Wallbox-Zähler werden separat vom Wohnungsstrom erfasst. Nur separate Stromkreise zuordnen, die nicht bereits in einem Wohnungszähler enthalten sind.",
+        "menu_options": {
+          "add_wallbox": "Wallbox hinzufügen",
+          "select_wallbox": "Wallbox bearbeiten",
+          "site_menu": "Andere Einstellungen"
+        }
+      },
+      "select_wallbox": {
+        "title": "Wallbox auswählen",
+        "data": {
+          "wallbox_id": "Wallbox"
+        }
+      },
+      "wallbox": {
+        "title": "Wallbox & Zähler",
+        "description": "Einen fortlaufenden kWh-Zähler der Wallbox wählen, z. B. EVCC. Der Verbrauch darf nicht schon in einem Wohnungszähler enthalten sein. Lade-RFID-Zuordnung erfolgt in einem späteren Schritt.",
+        "data": {
+          "name": "Bezeichnung",
+          "meter": "Wallbox-Energiezähler (kWh)",
+          "paused": "Wallbox pausieren",
+          "remove": "Wallbox entfernen"
+        }
+      },
+      "tariffs": {
+        "title": "Strompreise",
+        "description": "Preise in Euro je kWh. Werden erst für nach dem Speichern vollständig zugeordnete Messintervalle verwendet. Ungeklärte Energie wird nicht berechnet. Bereits gespeicherte Kosten bleiben bei späteren Tarifänderungen unverändert.",
+        "data": {
+          "solar": "Solarstrom (€/kWh)",
+          "grid": "Netzstrom (€/kWh)"
         }
       }
     },
@@ -261,12 +296,14 @@
           "apartments": "Wohnungen",
           "pv_details": "String-Details (optional)",
           "advanced": "Erweiterte Einstellungen",
-          "finish": "Zusammenfassung"
+          "finish": "Zusammenfassung",
+          "wallboxes": "Wallboxen",
+          "tariffs": "Strompreise"
         }
       },
       "finish": {
         "title": "6 · Prüfen und speichern",
-        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.",
+        "description": "**Anlage:** {name}\n\n**Wechselrichter ({pv_count}), Messseite {pv_measurement}:**\n{pv}\n\n**Netzbezug:** {grid_import}\n\n**Einspeisung:** {grid_export}\n\n**Batterie (Ladung / Entladung):** {battery}\n\n**Wohnungen ({apartment_count}):**\n{apartments}\n\n**Optionale String-Details:** {detail_count}\n\nErst Speichern übernimmt diese Einstellungen. Unter Einstellungen ändern kannst du die Zuordnungen korrigieren.\n\n**Wallboxen:**\n{wallboxes}\n\n**Strompreise:** {tariffs}",
         "menu_options": {
           "save": "Speichern",
           "site_menu": "Einstellungen ändern"
@@ -285,6 +322,39 @@
         "title": "Wechselrichter auswählen",
         "data": {
           "inverter_id": "Wechselrichter"
+        }
+      },
+      "wallboxes": {
+        "title": "Wallboxen",
+        "description": "Eigene Wallbox-Zähler werden separat vom Wohnungsstrom erfasst. Nur separate Stromkreise zuordnen, die nicht bereits in einem Wohnungszähler enthalten sind.",
+        "menu_options": {
+          "add_wallbox": "Wallbox hinzufügen",
+          "select_wallbox": "Wallbox bearbeiten",
+          "site_menu": "Andere Einstellungen"
+        }
+      },
+      "select_wallbox": {
+        "title": "Wallbox auswählen",
+        "data": {
+          "wallbox_id": "Wallbox"
+        }
+      },
+      "wallbox": {
+        "title": "Wallbox & Zähler",
+        "description": "Einen fortlaufenden kWh-Zähler der Wallbox wählen, z. B. EVCC. Der Verbrauch darf nicht schon in einem Wohnungszähler enthalten sein. Lade-RFID-Zuordnung erfolgt in einem späteren Schritt.",
+        "data": {
+          "name": "Bezeichnung",
+          "meter": "Wallbox-Energiezähler (kWh)",
+          "paused": "Wallbox pausieren",
+          "remove": "Wallbox entfernen"
+        }
+      },
+      "tariffs": {
+        "title": "Strompreise",
+        "description": "Preise in Euro je kWh. Werden erst für nach dem Speichern vollständig zugeordnete Messintervalle verwendet. Ungeklärte Energie wird nicht berechnet. Bereits gespeicherte Kosten bleiben bei späteren Tarifänderungen unverändert.",
+        "data": {
+          "solar": "Solarstrom (€/kWh)",
+          "grid": "Netzstrom (€/kWh)"
         }
       }
     },
@@ -340,7 +410,8 @@
           "overlapping_pv_sources": "Wechselrichter doppelt zugeordnet",
           "observing_pv_night": "Berechnung aktiv – PV-Nachtbetrieb (0 Ertrag angenommen)",
           "pv_night_transition": "Neue Messbasis für PV-Nacht-/Tagwechsel",
-          "waiting_for_meter_window": "Sammle Zählerwerte – warte auf gemeinsame Energiebilanz"
+          "waiting_for_meter_window": "Sammle Zählerwerte – warte auf gemeinsame Energiebilanz",
+          "observing_ambiguous_interval": "Verbrauch erfasst – Stromherkunft in diesem Intervall unklar"
         }
       }
     }
