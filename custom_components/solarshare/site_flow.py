@@ -86,6 +86,7 @@ class InstallationWizard:
                     "sources": {},
                     "apartments": [],
                     "wallboxes": [],
+                    "tariffs": {},
                     "max_power_kw": 100,
                     "alignment_seconds": 60,
                     "battery_capacity": 10,
@@ -376,6 +377,7 @@ class InstallationWizard:
                 "battery",
                 "apartments",
                 "wallboxes",
+                "tariffs",
                 "pv_details",
                 "advanced",
                 "finish",
@@ -470,6 +472,31 @@ class InstallationWizard:
             step_id="apartment", data_schema=probatio.Schema(fields), errors=errors
         )
 
+
+
+    async def async_step_tariffs(self, user_input=None):
+        """Prices are optional and never applied retroactively to past intervals."""
+        self._ensure_config()
+        if user_input is not None:
+            self.site["tariffs"] = {
+                "solar": str(user_input["solar"]),
+                "grid": str(user_input["grid"]),
+            }
+            return await self.async_step_site_menu()
+        current = self.site.get("tariffs", {})
+        fields = {}
+        for key in ("solar", "grid"):
+            options = {"default": float(current[key])} if key in current else {}
+            fields[probatio.Required(key, **options)] = selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=10, step=0.001,
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement="€/kWh",
+                )
+            )
+        return self.async_show_form(
+            step_id="tariffs", data_schema=probatio.Schema(fields)
+        )
 
     async def async_step_wallboxes(self, user_input=None):
         """Manage separately metered wallboxes; unmetered loads stay in residual."""
@@ -595,6 +622,11 @@ class InstallationWizard:
                     for item in apartments
                 ),
                 "detail_count": str(len(self.site["pv_details"])),
+                "tariffs": (
+                    f"Solar {self.site['tariffs']['solar']} €/kWh, Netz {self.site['tariffs']['grid']} €/kWh"
+                    if all(key in self.site.get("tariffs", {}) for key in ("solar", "grid"))
+                    else "Nicht eingerichtet"
+                ),
                 "wallboxes": "\\n".join(
                     f"- {item['name']}: {self._entity_label(item['meter'])}"
                     for item in self.site["wallboxes"]
