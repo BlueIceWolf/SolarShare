@@ -41,7 +41,8 @@
           "name": "Name der Wohnung",
           "meter": "Kumulativer Verbrauchszähler",
           "paused": "Wohnung pausieren",
-          "remove": "Wohnung aus der Anlage entfernen"
+          "remove": "Wohnung aus der Anlage entfernen",
+          "power": "Live-Leistung (W/kW, optional)"
         }
       },
       "inverters": {
@@ -159,7 +160,8 @@
           "name": "Bezeichnung",
           "meter": "Wallbox-Energiezähler (kWh)",
           "paused": "Wallbox pausieren",
-          "remove": "Wallbox entfernen"
+          "remove": "Wallbox entfernen",
+          "power": "Live-Leistung (W/kW, optional)"
         }
       },
       "tariffs": {
@@ -195,7 +197,9 @@
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
       "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen.",
-      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden."
+      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden.",
+      "not_power": "Bitte einen Leistungssensor in W oder kW auswählen.",
+      "duplicate_power": "Ein Leistungssensor darf nicht mehreren Wohnungen oder Wallboxen zugeordnet sein."
     },
     "abort": {
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen."
@@ -244,7 +248,8 @@
           "name": "Name der Wohnung",
           "meter": "Kumulativer Verbrauchszähler",
           "paused": "Wohnung pausieren",
-          "remove": "Wohnung aus der Anlage entfernen"
+          "remove": "Wohnung aus der Anlage entfernen",
+          "power": "Live-Leistung (W/kW, optional)"
         }
       },
       "inverters": {
@@ -362,7 +367,8 @@
           "name": "Bezeichnung",
           "meter": "Wallbox-Energiezähler (kWh)",
           "paused": "Wallbox pausieren",
-          "remove": "Wallbox entfernen"
+          "remove": "Wallbox entfernen",
+          "power": "Live-Leistung (W/kW, optional)"
         }
       },
       "tariffs": {
@@ -398,7 +404,9 @@
       "missing_sources": "PV-Erzeugung, Netzbezug und Einspeisung auswählen.",
       "single_site": "Es gibt bereits eine Anlage. Wohnungen über deren Konfiguration hinzufügen.",
       "pv_boundary_mismatch": "Die WR für die gemeinsame Summe müssen dieselbe Messseite haben. DC-Stringwerte separat unter String-Details erfassen.",
-      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden."
+      "overlapping_pv_sources": "Derselbe Growatt ist mit Total Power Generation und Total Solar Energy doppelt zugeordnet. Nur einen passenden AC-Gesamtertrag dieses WR verwenden.",
+      "not_power": "Bitte einen Leistungssensor in W oder kW auswählen.",
+      "duplicate_power": "Ein Leistungssensor darf nicht mehreren Wohnungen oder Wallboxen zugeordnet sein."
     }
   },
   "selectors": {
