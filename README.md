@@ -380,7 +380,7 @@ diesem Fall unter `lovelace.resources` selbst hinzufügen:
 lovelace:
   resource_mode: yaml
   resources:
-    - url: /solarshare/solarshare-card.js?v=0.3.2
+    - url: /solarshare/solarshare-card.js?v=0.4.0
       type: module
 ```
 
@@ -400,12 +400,12 @@ Die neuen Zähler müssen über **Konfigurieren** zugeordnet werden.
 
 ### Wenn „Custom element doesn't exist: solarshare-card“ erscheint
 
-1. Über HACS **SolarShare 0.3.2 oder neuer** installieren und Home Assistant
+1. Über HACS **SolarShare 0.4.0 oder neuer** installieren und Home Assistant
    vollständig neu starten.
 2. Unter **Einstellungen → Dashboards → Ressourcen** prüfen, ob **genau ein**
-   Modul mit `/solarshare/solarshare-card.js?v=0.3.2` eingetragen ist.
+   Modul mit `/solarshare/solarshare-card.js?v=0.4.0` eingetragen ist.
 3. Im gleichen Home-Assistant-System die Adresse
-   `/solarshare/solarshare-card.js?v=0.3.2` aufrufen. Sie muss JavaScript statt
+   `/solarshare/solarshare-card.js?v=0.4.0` aufrufen. Sie muss JavaScript statt
    einer 404- oder Login-Fehlerseite zeigen.
 4. Dashboard neu laden, bei Bedarf Browsercache umgehen (Strg+F5).
 
@@ -414,3 +414,64 @@ Wird die Ressource bei **Storage/UI** noch nicht eingetragen, kann sie unter
 **JavaScript-Modul** ergänzt werden. Der Integrationseintrag und die
 bereits aufgezeichneten Energie-/Kostenwerte müssen dafür nicht gelöscht werden.
 Bei YAML-Ressourcen die Konfiguration wie oben beschrieben anpassen.
+
+
+## SolarShare 0.4.0: letzte Woche, letzter Monat und Live-Autarkie
+
+Die integrierte, bildschirmfüllende Karte hat jetzt die Zeiträume **Live**,
+**Heute**, **Diese Woche**, **Letzte Woche**, **Dieser Monat**,
+**Letzter Monat**, **Jahr** und **Gesamt**. Eine Woche beginnt am Montag
+und endet am Sonntag (lokales Home-Assistant-Datum).
+
+Die zusätzlichen Wochen- und Vormonatswerte werden für Anlage, Wohnungen
+und Wallboxen angelegt, einschließlich unabhängig gemessener kWh und
+bereits gebuchter Kosten. Die Werte werden nicht aus dem Gesamtzähler
+zurückgerechnet. Insbesondere können früher nicht gespeicherte Wochen-
+oder Vormonatswerte nicht nachträglich erfunden werden: Die neuen
+Zeiträume füllen sich erst ab der aktualisierten Version, sofern
+entsprechende gültige Messintervalle auftreten. Die bereits
+gespeicherten Gesamt-/Tages-/Monats-/Jahreswerte bleiben erhalten.
+
+### Live-Autarkie einrichten
+
+Unter **Einstellungen → Geräte & Dienste → SolarShare → Konfigurieren →
+Live-Leistung** die verfügbaren **Leistungssensoren** (W/kW) auswählen.
+
+Zwei unterstützte Varianten:
+
+- **Einfach:** Gebäudeverbrauch (W) und Netzbezug (W) angeben.
+  Die aktuelle Netzunabhängigkeit wird aus
+  `(Gebäudeverbrauch - Netzbezug) / Gebäudeverbrauch × 100` berechnet.
+- **Aus Energieflüssen:** PV-Leistungen (mehrere Wechselrichter möglich),
+  Netzbezug und Einspeisung sowie bei vorhandenem Speicher
+  Lade- und Entladeleistung angeben. Daraus wird zuerst die
+  Gebäudeleistung gebildet.
+
+**Wichtig:** Die Eingaben müssen positive Leistungen für die jeweilige
+Richtung liefern. Eine einzige vorzeichenbehaftete Netzleistung darf
+nicht einfach als positiver Netzbezug verwendet werden. Fehlende,
+ältere (mehr als fünf Minuten seit dem letzten Home-Assistant-Bericht),
+nicht numerische oder unplausible Leistungswerte ergeben **keinen
+Live-Autarkiewert**. Die Karte zeigt dann eine nachvollziehbare
+Konfigurations-/Messdatenmeldung.
+
+Die Live-Anzeige misst die **aktuelle Netzunabhängigkeit**, nicht
+zwingend den direkt erzeugten PV-Anteil. Gerade bei Strom aus dem
+Batteriespeicher kann die ursprünglich gespeicherte Energie
+Solar- oder Netzstrom gewesen sein. Die Live-Leistungswerte sind
+nur Anzeigeinformationen und ändern **keine** kWh, Tarife oder
+Abrechnungswerte.
+
+Nach der Installation von **0.4.0** über HACS ist wegen der neuen
+Python-Sensoren einmal ein **Home-Assistant-Core-Neustart** nötig.
+Anschließend muss die Dashboard-Karte nur neu geladen werden.
+Bei Änderungen am reinen Dashboard-JavaScript ist kein weiterer
+Core-Neustart erforderlich.
+
+Lokale Tests (nicht über GitHub Actions):
+
+```sh
+python -m unittest tests.test_periods_live -v
+python -m unittest discover -s tests -p 'test_*accounting.py' -v
+```
+
