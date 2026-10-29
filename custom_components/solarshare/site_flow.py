@@ -50,10 +50,10 @@ def validate_config(hass, config, entry_id=None):
         return "battery_pair"
     if not config["apartments"]:
         return "apartment_required"
-    if any(not item["name"].strip() for item in config["apartments"]):
+    if any(not item["name"].strip() for group in ("apartments", "wallboxes") for item in config.get(group, [])):
         return "empty_name"
     meters = source_entities(sources)
-    meters += [item["meter"] for item in config["apartments"] if not item.get("paused")]
+    meters += [item["meter"] for group in ("apartments", "wallboxes") for item in config.get(group, []) if not item.get("paused")]
     if len(meters) != len(set(meters)):
         return "duplicate_meter"
     for meter in meters:
@@ -85,6 +85,7 @@ class InstallationWizard:
                     "name": "SolarShare",
                     "sources": {},
                     "apartments": [],
+                    "wallboxes": [],
                     "max_power_kw": 100,
                     "alignment_seconds": 60,
                     "battery_capacity": 10,
@@ -115,7 +116,7 @@ class InstallationWizard:
     def _meter_errors(self, updates):
         candidate = {**self.site["sources"], **updates}
         meters = source_entities(candidate)
-        meters += [a["meter"] for a in self.site["apartments"] if not a.get("paused")]
+        meters += [a["meter"] for group in ("apartments", "wallboxes") for a in self.site.get(group, []) if not a.get("paused")]
         errors = {"base": "duplicate_meter"} if len(meters) != len(set(meters)) else {}
         if overlapping_growatt_totals(candidate.get("pv")):
             errors["pv" if "pv" in updates else "base"] = "overlapping_pv_sources"
@@ -374,6 +375,7 @@ class InstallationWizard:
                 "grid",
                 "battery",
                 "apartments",
+                "wallboxes",
                 "pv_details",
                 "advanced",
                 "finish",
@@ -446,6 +448,7 @@ class InstallationWizard:
                     and item["meter"] == data["meter"]
                     for item in self.site["apartments"]
                 )
+                or any(not item.get("paused") and item["meter"] == data["meter"] for item in self.site["wallboxes"])
             ):
                 errors["meter"] = "duplicate_meter"
             if not errors:
@@ -465,6 +468,99 @@ class InstallationWizard:
             fields[probatio.Optional("remove", default=False)] = bool
         return self.async_show_form(
             step_id="apartment", data_schema=probatio.Schema(fields), errors=errors
+        )
+
+
+    async def async_step_wallboxes(self, user_input=None):
+        """Manage separately metered wallboxes; unmetered loads stay in residual."""
+        self._ensure_config()
+        return self.async_show_menu(
+            step_id="wallboxes",
+            description_placeholders={
+                "wallboxes": ", ".join(item["name"] for item in self.site["wallboxes"]) or "—"
+            },
+            menu_options=["add_wallbox", "select_wallbox", "site_menu"],
+        )
+
+    async def async_step_add_wallbox(self, user_input=None):
+        self._ensure_config()
+        self.editing_wallbox = None
+        return await self.async_step_wallbox()
+
+    async def async_step_select_wallbox(self, user_input=None):
+        self._ensure_config()
+        if not self.site["wallboxes"]:
+            return await self.async_step_add_wallbox()
+        if user_input is not None:
+            self.editing_wallbox = user_input["wallbox_id"]
+            return await self.async_step_wallbox()
+        return self.async_show_form(
+            step_id="select_wallbox",
+            data_schema=probatio.Schema({
+                probatio.Required("wallbox_id"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=[
+                        {"value": item["id"], "label": item["name"]}
+                        for item in self.site["wallboxes"]
+                    ])
+                )
+            }),
+        )
+
+    async def async_step_wallbox(self, user_input=None):
+        """A wallbox is a dedicated load, never a second copy of an apartment load."""
+        self._ensure_config()
+        current = next(
+            (item for item in self.site["wallboxes"]
+             if item["id"] == getattr(self, "editing_wallbox", None)), {}
+        )
+        errors = {}
+        if user_input is not None:
+            data = {
+                "id": current.get("id", uuid4().hex),
+                "name": user_input["name"].strip(),
+                "meter": user_input["meter"],
+                "paused": user_input.get("paused", False),
+                "kind": "wallbox",
+            }
+            if user_input.get("remove"):
+                self.site["wallboxes"] = [
+                    item for item in self.site["wallboxes"] if item["id"] != data["id"]
+                ]
+                return await self.async_step_wallboxes()
+            if not data["name"]:
+                errors["name"] = "empty_name"
+            elif error := validate_source(self.hass, data["meter"]):
+                errors["meter"] = error
+            elif not data["paused"] and (
+                data["meter"] in source_entities(self.site["sources"])
+                or any(
+                    item["meter"] == data["meter"] and not item.get("paused")
+                    for item in self.site["apartments"]
+                )
+                or any(
+                    item["id"] != data["id"] and item["meter"] == data["meter"]
+                    and not item.get("paused")
+                    for item in self.site["wallboxes"]
+                )
+            ):
+                errors["meter"] = "duplicate_meter"
+            if not errors:
+                self.site["wallboxes"] = [
+                    item for item in self.site["wallboxes"] if item["id"] != data["id"]
+                ] + [data]
+                return await self.async_step_wallboxes()
+        defaults = user_input or current
+        fields = {
+            probatio.Required("name", default=defaults.get("name", "")): str,
+            probatio.Required(
+                "meter", **({"default": defaults["meter"]} if defaults.get("meter") else {})
+            ): energy_selector(),
+            probatio.Optional("paused", default=defaults.get("paused", False)): bool,
+        }
+        if current:
+            fields[probatio.Optional("remove", default=False)] = bool
+        return self.async_show_form(
+            step_id="wallbox", data_schema=probatio.Schema(fields), errors=errors
         )
 
     def _entity_label(self, entity_id):
@@ -499,6 +595,10 @@ class InstallationWizard:
                     for item in apartments
                 ),
                 "detail_count": str(len(self.site["pv_details"])),
+                "wallboxes": "\\n".join(
+                    f"- {item['name']}: {self._entity_label(item['meter'])}"
+                    for item in self.site["wallboxes"]
+                ) or "—",
             },
         )
 
@@ -536,6 +636,8 @@ class InstallationWizard:
                 != sorted(
                     (a["id"], a["meter"], a.get("paused", False)) for a in old.get("apartments", [])
                 )
+                or sorted((w["id"], w["meter"], w.get("paused", False)) for w in data.get("wallboxes", []))
+                != sorted((w["id"], w["meter"], w.get("paused", False)) for w in old.get("wallboxes", []))
             ):
                 data["revision"] = uuid4().hex
             self.hass.config_entries.async_update_entry(entry, title=data["name"])
