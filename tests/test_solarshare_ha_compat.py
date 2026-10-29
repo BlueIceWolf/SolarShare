@@ -76,7 +76,7 @@ class DeviceLinkTests(unittest.TestCase):
             self.assertEqual(apartment._attr_device_info["via_device_id"], "actual-registry-id")
             self.assertNotIn("via_device", apartment._attr_device_info)
 
-        hass = SimpleNamespace(config_entries=SimpleNamespace(async_forward_entry_setups=forward))
+        hass = SimpleNamespace(data={"_solarshare_card_resource_registered": True}, config_entries=SimpleNamespace(async_forward_entry_setups=forward))
         ns = {
             "HomeAssistant": object, "ConfigEntry": object, "SiteRuntime": Runtime,
             "SolarShareRuntime": Runtime, "dr": SimpleNamespace(async_get=lambda ha: registry),
@@ -126,7 +126,7 @@ class ResourceRegistrationTests(unittest.TestCase):
 
         async def get_integration(hass_, domain):
             self.assertEqual(domain, "solarshare")
-            return SimpleNamespace(version="0.3.1")
+            return SimpleNamespace(version="0.3.2")
 
         ns = {
             "HomeAssistant": object, "DOMAIN": "solarshare",
@@ -147,7 +147,7 @@ class ResourceRegistrationTests(unittest.TestCase):
         self.assertEqual(resources.created, 1)
         self.assertEqual(resources.updated, 0)
         self.assertEqual(resources.rows[0], unrelated)
-        self.assertEqual(resources.rows[1]["url"], "/solarshare/solarshare-card.js?v=0.3.1")
+        self.assertEqual(resources.rows[1]["url"], "/solarshare/solarshare-card.js?v=0.3.2")
 
     def test_update_legacy_unversioned_resource_in_place(self):
         initial = [{"id": "old", "url": "/solarshare/solarshare-card.js", "res_type": "module"}]
@@ -155,7 +155,17 @@ class ResourceRegistrationTests(unittest.TestCase):
         self.assertEqual(resources.created, 0)
         self.assertEqual(resources.updated, 1)
         self.assertEqual(resources.rows[0]["id"], "old")
-        self.assertEqual(resources.rows[0]["url"], "/solarshare/solarshare-card.js?v=0.3.1")
+        self.assertEqual(resources.rows[0]["url"], "/solarshare/solarshare-card.js?v=0.3.2")
+
+    def test_versioned_resource_uses_new_card_version(self):
+        resources = self.register([
+            {"id": "prior", "url": "/solarshare/solarshare-card.js?v=0.3.1",
+             "res_type": "module"}
+        ])
+        self.assertEqual(resources.updated, 1)
+        self.assertEqual(
+            resources.rows[0]["url"], "/solarshare/solarshare-card.js?v=0.3.2"
+        )
 
     def test_skip_yaml_resource_mode(self):
         resources = self.register([], mode="yaml")
