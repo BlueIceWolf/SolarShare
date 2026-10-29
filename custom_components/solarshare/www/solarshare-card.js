@@ -70,7 +70,7 @@ class SolarShareCard extends HTMLElement {
         const entity = this.find(device.id, metric);
         const cost = index === 4;
         const state = this.state(entity);
-        const partial = cost && state && Number(state.attributes.unpriced_kwh || 0) > 0;
+        const partial = cost && state && Boolean(state.attributes.partial_amount);
         return '<td data-entity="' + this.esc(entity ? entity.entity_id : "") + '">' +
           this.esc(this.value(entity, cost)) + (partial ? "<small>Teilbetrag</small>" : "") + "</td>";
       }).join("");
