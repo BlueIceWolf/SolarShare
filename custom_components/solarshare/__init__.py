@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CoreState, EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -17,28 +17,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Expose the bundled card and register it once after Lovelace startup."""
+    """Serve and register the card before the dashboard can be opened.
+
+    Lovelace and HTTP are hard dependencies, so both are initialized first.
+    Registration is idempotent: upgrades do not create a duplicate resource.
+    """
     try:
         await async_register_card_path(hass)
     except Exception:
-        _LOGGER.exception("Cannot serve SolarShare card; energy integration remains usable")
+        _LOGGER.exception("Unable to serve the bundled SolarShare card")
 
-    async def register_resource(_event=None):
-        try:
-            await async_register_card_resource(hass)
-        except Exception:
-            # A resource failure must never prevent metering or modify the ledger.
-            _LOGGER.exception(
-                "Automatic SolarShare card registration failed. Add "
-                "/solarshare/solarshare-card.js manually under Dashboard resources."
-            )
-
-    if hass.state == CoreState.running:
-        await register_resource()
-    else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, register_resource)
+    try:
+        await async_register_card_resource(hass)
+    except Exception:
+        _LOGGER.exception(
+            "Unable to register SolarShare dashboard resource automatically; "
+            "check Dashboard > Resources for /solarshare/solarshare-card.js"
+        )
     return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load durable totals before exposing sensors or listening for readings."""
@@ -46,6 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime = SiteRuntime(hass, entry) if "sources" in config else SolarShareRuntime(hass, entry)
     await runtime.async_load()
     entry.runtime_data = runtime
+    # Recover from an earlier frontend registration error during setup.
+    # This never alters stored energy data or creates duplicate resources.
+    if not hass.data.get("_solarshare_card_resource_registered"):
+        try:
+            await async_register_card_path(hass)
+            await async_register_card_resource(hass)
+        except Exception:
+            _LOGGER.exception("SolarShare card could not be auto-registered")
     if "sources" in config:
         # Register the parent before adding apartment devices. Home Assistant's
         # via_device_id expects a registry ID, not an identifier tuple.
