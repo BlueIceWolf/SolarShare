@@ -355,15 +355,37 @@ Messkonzepte und Prüfung der Messgrenzen notwendig.
 
 Nach Aktualisierung und vollständigem Neustart:
 
-1. Unter **Einstellungen → Dashboards → Ressourcen** das JavaScript-Modul
-   `/solarshare/solarshare-card.js` hinzufügen, Ressourcentyp **JavaScript-Modul**.
+Ab **0.3.1** installiert SolarShare die mitgelieferte Dashboard-Karte und
+registriert sie bei standardmäßiger Lovelace-Ressourcenverwaltung (**Storage/UI**)
+automatisch als JavaScript-Modul. Es ist keine zusätzliche HACS-Installation und
+kein manueller Eintrag unter **Dashboard → Ressourcen** nötig. Bereits vorhandene
+Einträge für dieselbe Karte werden aktualisiert statt doppelt angelegt;
+andere Dashboard-Ressourcen bleiben unverändert.
+
+1. Integration über HACS auf die neue Version aktualisieren und Home Assistant
+   vollständig neu starten.
 2. Im Dashboard eine **Panel-Ansicht (eine Karte)** anlegen.
-3. Als manuelle Karte eintragen:
+3. **Karte hinzufügen → SolarShare** auswählen. Alternativ als manuelle Karte:
 
 ```yaml
 type: custom:solarshare-card
 period: month
 ```
+
+Bei ausdrücklich per YAML verwalteten Ressourcen (`lovelace.resource_mode: yaml`)
+ist eine automatische Änderung der Ressourcenliste technisch nicht möglich. In
+diesem Fall unter `lovelace.resources` selbst hinzufügen:
+
+```yaml
+lovelace:
+  resource_mode: yaml
+  resources:
+    - url: /solarshare/solarshare-card.js?v=0.3.1
+      type: module
+```
+
+Der Pfad ist bereits durch die Integration eingebunden. Nach einem Kartenupdate
+die Home-Assistant-Seite neu laden (gegebenenfalls mit geleertem Browsercache).
 
 Die Karte findet automatisch die SolarShare-Geräte und zeigt Wohnungen,
 Wallboxen, gemessene kWh, zugeordnete Solar-/Netzanteile, ungeklärte
