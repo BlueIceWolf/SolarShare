@@ -36,7 +36,7 @@ SITE_METRICS = {
 
 def entities(entry):
     runtime = entry.runtime_data
-    result = [SiteStatus(entry)]
+    result = [SiteStatus(entry), LiveAutarkyPoint(entry)]
     for period in PERIODS:
         for metric in SITE_METRICS:
             if metric in ("charge", "discharge") and not runtime.ledger.battery:
@@ -94,6 +94,43 @@ class SiteEntity(SensorEntity):
             "source_sampling": "fresh_reports"
             if self.runtime.config.get("require_fresh_reports", False)
             else "available_counter_snapshots",
+        }
+
+
+
+class LiveAutarkyPoint(SiteEntity):
+    """Current grid independence, never used in the cost calculation."""
+
+    _attr_icon = "mdi:home-percent-outline"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, entry):
+        super().__init__(entry, "site_live_autarky", "Autarkie Live")
+
+    @property
+    def native_value(self):
+        metrics = self.runtime.live_metrics()
+        return metrics["autarky"] if metrics else None
+
+    @property
+    def available(self):
+        return self.runtime.live_metrics() is not None
+
+    @property
+    def extra_state_attributes(self):
+        metrics = self.runtime.live_metrics()
+        if metrics is None:
+            return {
+                "status": "power_sources_missing_or_stale",
+                "configured": bool(self.runtime.live_power_sources),
+                "explanation": "Live grid independence needs fresh power sensors.",
+            }
+        return {
+            **metrics,
+            "status": "live",
+            "accounting_scope": "display_only_not_billable",
+            "battery_origin": "not_tracked_in_live_percentage",
         }
 
 
