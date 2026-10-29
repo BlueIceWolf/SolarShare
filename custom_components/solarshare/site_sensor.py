@@ -42,14 +42,14 @@ def entities(entry):
             if metric in ("charge", "discharge") and not runtime.ledger.battery:
                 continue
             result.append(EnergyPoint(entry, metric, period))
-        for apartment in runtime.apartments:
+        for apartment in runtime.units:
             for metric in APARTMENT_METRICS:
                 result.append(EnergyPoint(entry, metric, period, apartment))
     for key in runtime.meters:
         result.append(SourceReading(entry, key))
     if "pv" not in runtime.meters:
         result.append(SourceReading(entry, "pv"))
-    for apartment in runtime.apartments:
+    for apartment in runtime.units:
         result.append(AveragePower(entry, apartment))
     if runtime.legacy_total is not None:
         result.append(LegacyArchive(entry))
@@ -70,7 +70,7 @@ class SiteEntity(SensorEntity):
             identifiers={(DOMAIN, device_id)},
             name=apartment["name"] if apartment else self.runtime.config["name"],
             manufacturer="SolarShare",
-            model="Wohnung" if apartment else "Energieanlage",
+            model=("Wallbox" if apartment.get("kind") == "wallbox" else "Wohnung") if apartment else "Energieanlage",
             **({"via_device_id": self.runtime.site_device_id} if apartment else {}),
         )
 
@@ -259,7 +259,7 @@ class SourceReading(SiteEntity):
     def __init__(self, entry, key):
         self.key = key
         apartment = next(
-            (a for a in entry.runtime_data.apartments if key == f"apt:{a['id']}"), None
+            (a for a in entry.runtime_data.units if key == f"apt:{a['id']}"), None
         )
         label = (
             "Zählerstand"
