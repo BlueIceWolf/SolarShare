@@ -46,7 +46,7 @@ class CalendarPeriodsTests(unittest.TestCase):
         self.assertEqual(periods.period_key("last_month", "2026-03-01"), "month:2026-02")
 
     def test_observed_meter_week_and_month_retained_after_restore(self):
-        tracker = observed.ObservedConsumption(max_power_kw=50)
+        tracker = observed.ObservedConsumption(max_power_kw=200)
         tracker.observe("w1", 100, 0, "2026-10-25")
         tracker.observe("w1", 101, 60, "2026-10-25")
         tracker.invalidate("w1")
