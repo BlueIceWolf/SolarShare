@@ -2,12 +2,22 @@
 
 import importlib.util
 import sys
+import types
+import sys
 import unittest
 from decimal import Decimal as D
 from pathlib import Path
 
+# Load the pure accounting code as a package so its calendar helper
+# resolves without installing Home Assistant.
+PACKAGE = "_solarshare_pure_tests"
+if PACKAGE not in sys.modules:
+    package = types.ModuleType(PACKAGE)
+    package.__path__ = [str(Path(__file__).parents[1] / "custom_components/solarshare")]
+    sys.modules[PACKAGE] = package
+
 SPEC = importlib.util.spec_from_file_location(
-    "site_accounting", Path(__file__).parents[1] / "custom_components/solarshare/site_accounting.py"
+    f"{PACKAGE}.site_accounting", Path(__file__).parents[1] / "custom_components/solarshare/site_accounting.py"
 )
 module = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = module
