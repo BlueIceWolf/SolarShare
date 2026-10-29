@@ -44,6 +44,7 @@ def entities(entry):
             result.append(EnergyPoint(entry, metric, period))
         for apartment in runtime.units:
             result.append(ObservedEnergyPoint(entry, period, apartment))
+            result.append(EnergyCostPoint(entry, period, apartment))
             for metric in APARTMENT_METRICS:
                 result.append(EnergyPoint(entry, metric, period, apartment))
     for key in runtime.meters:
@@ -138,6 +139,54 @@ class ObservedEnergyPoint(SiteEntity):
             "allocation_status": self.runtime.ledger.reason,
             "meter": self.unit["meter"],
             "gap_count": self.runtime.observed.gaps.get(self.unit["id"], 0),
+        }
+
+
+class EnergyCostPoint(SiteEntity):
+    """Accrued priced solar/grid energy, excluding unresolved-origin kWh."""
+
+    _attr_icon = "mdi:currency-eur"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = "EUR"
+
+    def __init__(self, entry, period, unit):
+        self.period = period
+        self.unit = unit
+        super().__init__(
+            entry, f"{unit['id']}_priced_energy_cost_{period}",
+            f"Kosten zugeordnete Energie {PERIODS[period]}", unit,
+        )
+        self._attr_state_class = (
+            SensorStateClass.TOTAL_INCREASING
+            if period == "lifetime" else SensorStateClass.TOTAL
+        )
+
+    def _costs(self):
+        return self.runtime.tariff_ledger.value(
+            self.unit["id"], self.period, dt_util.now().date().isoformat()
+        )
+
+    @property
+    def native_value(self):
+        amounts = self._costs()
+        return round(amounts["solar_eur"] + amounts["grid_eur"], 4) if amounts else None
+
+    @property
+    def available(self):
+        return not self.unit.get("paused") and self._costs() is not None
+
+    @property
+    def extra_state_attributes(self):
+        amounts = self._costs()
+        if not amounts:
+            return {"status": "no_priced_intervals_yet"}
+        return {
+            "solar_cost_eur": str(amounts["solar_eur"]),
+            "grid_cost_eur": str(amounts["grid_eur"]),
+            "unpriced_kwh": str(amounts["unpriced_kwh"]),
+            "partial_amount": bool(amounts["unpriced_kwh"]),
+            "accounting_scope": "priced_verified_intervals_only",
+            "price_history": "rates_at_time_of_allocation",
         }
 
 
