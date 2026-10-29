@@ -125,12 +125,8 @@ class ObservedEnergyPoint(SiteEntity):
 
     @property
     def available(self):
-        key = f"apt:{self.unit['id']}"
-        return (
-            not self.unit.get("paused")
-            and self.runtime.readings.get(key) is not None
-            and self.native_value is not None
-        )
+        # Published historical values do not disappear during a meter outage.
+        return self.native_value is not None
 
     @property
     def extra_state_attributes(self):
@@ -138,6 +134,9 @@ class ObservedEnergyPoint(SiteEntity):
             "accounting_scope": "complete_observed_meter_intervals_only",
             "allocation_status": self.runtime.ledger.reason,
             "meter": self.unit["meter"],
+            "meter_currently_available": self.runtime.readings.get(
+                f"apt:{self.unit['id']}"
+            ) is not None,
             "gap_count": self.runtime.observed.gaps.get(self.unit["id"], 0),
         }
 
@@ -173,18 +172,27 @@ class EnergyCostPoint(SiteEntity):
 
     @property
     def available(self):
-        return not self.unit.get("paused") and self._costs() is not None
+        return self._costs() is not None
 
     @property
     def extra_state_attributes(self):
         amounts = self._costs()
         if not amounts:
             return {"status": "no_priced_intervals_yet"}
+        day = dt_util.now().date().isoformat()
+        observed = self.runtime.observed.value(self.unit["id"], self.period, day)
+        bucket = self.runtime.ledger.totals(self.period, day)
+        allocated = (
+            bucket.get("apartments", {}).get(self.unit["id"], {}).get("consumption")
+            if bucket else None
+        )
+        uncovered = max((observed or Decimal(0)) - (allocated or Decimal(0)), Decimal(0))
         return {
             "solar_cost_eur": str(amounts["solar_eur"]),
             "grid_cost_eur": str(amounts["grid_eur"]),
             "unpriced_kwh": str(amounts["unpriced_kwh"]),
-            "partial_amount": bool(amounts["unpriced_kwh"]),
+            "observed_not_allocated_kwh": str(uncovered),
+            "partial_amount": bool(amounts["unpriced_kwh"] or uncovered),
             "accounting_scope": "priced_verified_intervals_only",
             "price_history": "rates_at_time_of_allocation",
         }
