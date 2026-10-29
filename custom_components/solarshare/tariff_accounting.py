@@ -20,9 +20,11 @@ class TariffLedger:
                 raise ValueError("Invalid tariff storage")
             self.periods[period] = {}
             for unit, parts in units.items():
-                if set(parts) != {"solar_eur", "grid_eur", "unpriced_kwh"}:
+                if (not {"solar_eur", "grid_eur", "unpriced_kwh"} <= set(parts)
+                        or set(parts) - {"solar_eur", "grid_eur", "unpriced_kwh", "covered_kwh"}):
                     raise ValueError("Invalid tariff bucket")
                 values = {key: Decimal(str(value)) for key, value in parts.items()}
+                values.setdefault("covered_kwh", Decimal(0))
                 if any(not value.is_finite() or value < 0 for value in values.values()):
                     raise ValueError("Invalid monetary total")
                 self.periods[period][unit] = values
@@ -45,11 +47,12 @@ class TariffLedger:
             for unit, values in allocations.items():
                 amounts = bucket.setdefault(unit, {
                     "solar_eur": Decimal(0), "grid_eur": Decimal(0),
-                    "unpriced_kwh": Decimal(0),
+                    "unpriced_kwh": Decimal(0), "covered_kwh": Decimal(0),
                 })
                 amounts["solar_eur"] += values["solar"] * rates["solar"]
                 amounts["grid_eur"] += values["grid"] * rates["grid"]
                 amounts["unpriced_kwh"] += values["unknown"]
+                amounts["covered_kwh"] += values["consumption"]
         return True
 
     def value(self, unit, period, day):
