@@ -228,6 +228,133 @@ class SolarShareCard extends HTMLElement {
     });
   }
 }
+class SolarShareCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({mode:"open"});
+    this.devices = [];
+    this.loading = false;
+    this.loaded = false;
+  }
+  setConfig(config) {
+    this._config = {...config};
+    this.render();
+  }
+  set hass(hass) {
+    this._hass = hass;
+    if (!this.loaded && !this.loading) this.loadDevices();
+    this.render();
+  }
+  async loadDevices() {
+    if (!this._hass || this.loaded || this.loading) return;
+    this.loading = true;
+    try {
+      const devices = await this._hass.callWS({type:"config/device_registry/list"});
+      this.devices = devices.filter(d =>
+        d.manufacturer === "SolarShare" && ["Wohnung","Wallbox"].includes(d.model));
+      this.loaded = true;
+    } catch (error) {
+      this.error = "Geräte konnten nicht geladen werden: " + error.message;
+    } finally {
+      this.loading = false;
+      this.render();
+    }
+  }
+  escape(value) {
+    return String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    })[ch]);
+  }
+  options(name, items) {
+    const enabled = Array.isArray(this._config[name]) ?
+      this._config[name] : items.map(item => item[0]);
+    return items.map(([value,label]) =>
+      '<label><input type="checkbox" data-set="' + name +
+      '" value="' + this.escape(value) + '"' +
+      (enabled.includes(value) ? ' checked' : '') + '>' +
+      '<span>' + this.escape(label) + '</span></label>'
+    ).join("");
+  }
+  render() {
+    if (!this.shadowRoot || !this._config) return;
+    const periods = [
+      ["live","Live"],["day","Heute"],["week","Diese Woche"],["last_week","Letzte Woche"],
+      ["month","Dieser Monat"],["last_month","Letzter Monat"],["year","Jahr"],["lifetime","Gesamt"]
+    ];
+    const sections = [
+      ["overview","Gesamtübersicht"],["apartments","Wohnungen"],
+      ["wallboxes","Wallboxen"],["live_site","Gebäude-Autarkie live"],
+      ["live_units","Autarkie je Einheit live"]
+    ];
+    const cols = [
+      ["observed","Gemessener Verbrauch"],["solar","Solarstrom"],
+      ["grid","Netzstrom"],["unknown","Ungeklärte Herkunft"],
+      ["priced_energy_cost","Kosten"]
+    ];
+    const summary = [
+      ["pv","PV-Erzeugung"],["import","Netzbezug"],
+      ["consumption","Gebäudeverbrauch"],["residual","Allgemeinverbrauch"]
+    ];
+    const defaultPeriod = this._config.period || "month";
+    const periodOptions = periods.filter(([key]) =>
+      (this._config.periods || periods.map(p => p[0])).includes(key));
+    const unitEntries = this.devices.map(d => [d.id,d.name || d.name_by_user || "Einheit"]);
+    this.shadowRoot.innerHTML =
+      '<style>:host{display:block}h3{margin:16px 0 8px;font-size:15px}' +
+      'fieldset{border:1px solid var(--divider-color);border-radius:12px;padding:12px;margin:10px 0}' +
+      'legend{padding:0 5px;font-weight:600}label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer}' +
+      'input{accent-color:var(--primary-color)}select{width:100%;padding:9px;border-radius:10px;' +
+      'background:var(--card-background-color);color:var(--primary-text-color);border:1px solid var(--divider-color)}' +
+      '.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px 12px}' +
+      '.note{color:var(--secondary-text-color);font-size:12px}</style>' +
+      '<h3>Standardansicht</h3><select data-default-period>' +
+      periodOptions.map(([id,label]) => '<option value="' + id + '"' +
+        (defaultPeriod === id ? ' selected' : '') + '>' + label + '</option>').join("") +
+      '</select>' +
+      '<fieldset><legend>Sichtbare Zeiträume</legend><div class="choices">' +
+      this.options("periods",periods) + '</div></fieldset>' +
+      '<fieldset><legend>Bereiche anzeigen</legend><div class="choices">' +
+      this.options("sections",sections) + '</div></fieldset>' +
+      '<fieldset><legend>Kennzahlen oben</legend><div class="choices">' +
+      this.options("overview",summary) + '</div></fieldset>' +
+      '<fieldset><legend>Spalten je Wohnung / Wallbox</legend><div class="choices">' +
+      this.options("columns",cols) + '</div></fieldset>' +
+      '<fieldset><legend>Sichtbare Wohnungen & Wallboxen</legend><div class="choices">' +
+      (this.loaded ? this.options("units",unitEntries) :
+        '<div class="note">' + this.escape(this.error || "SolarShare-Geräte werden geladen …") + '</div>') +
+      '</div></fieldset>' +
+      '<p class="note">Einstellungen betreffen nur die Darstellung. Die kWh-Erfassung und Abrechnung bleiben unverändert.</p>';
+    this.shadowRoot.querySelectorAll('input[data-set]').forEach(input => {
+      input.addEventListener("change", () => {
+        const name = input.dataset.set;
+        const group = name === "periods" ? periods : name === "sections" ? sections :
+          name === "overview" ? summary : name === "columns" ? cols : unitEntries;
+        const checked = this.shadowRoot.querySelectorAll('input[data-set="' + name + '"]:checked');
+        const next = Array.from(checked, item => item.value);
+        if (name === "periods" && !next.length) { this.render(); return; }
+        this._config = {...this._config,[name]:next};
+        if (name === "periods" && !next.includes(this._config.period || "month")) {
+          this._config.period = next[0];
+        }
+        this.dispatchEvent(new CustomEvent("config-changed",{
+          bubbles:true,composed:true,detail:{config:{...this._config}}
+        }));
+        this.render();
+      });
+    });
+    const selector = this.shadowRoot.querySelector("select[data-default-period]");
+    if (selector) selector.addEventListener("change", () => {
+      this._config = {...this._config,period:selector.value};
+      this.dispatchEvent(new CustomEvent("config-changed",{
+        bubbles:true,composed:true,detail:{config:{...this._config}}
+      }));
+    });
+  }
+}
+if (!customElements.get("solarshare-card-editor")) {
+  customElements.define("solarshare-card-editor",SolarShareCardEditor);
+}
+
 if (!customElements.get("solarshare-card")) customElements.define("solarshare-card", SolarShareCard);
 window.customCards = window.customCards || [];
 window.customCards.push({type:"solarshare-card",name:"SolarShare",description:"Kosten und Verbrauch aller Wohnungen und Wallboxen"});
