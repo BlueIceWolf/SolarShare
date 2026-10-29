@@ -33,13 +33,18 @@ async def async_register_card_resource(hass: HomeAssistant) -> None:
     """
     lovelace = hass.data.get("lovelace")
     if lovelace is None:
-        _LOGGER.info("Lovelace not loaded; SolarShare card resource can be added manually")
+        _LOGGER.warning("Lovelace is not ready: SolarShare card will be retried")
         return
     if lovelace.resource_mode != "storage":
-        _LOGGER.info("Lovelace resources are YAML-managed; skipping auto-registration")
+        _LOGGER.info("Lovelace uses YAML resources; add %s as a module", CARD_PATH)
         return
 
+    if hass.data.get("_solarshare_card_resource_registered"):
+        return
     resources = lovelace.resources
+    # Home Assistant may defer loading .storage/lovelace_resources until first use.
+    # Always load it before reading or writing, otherwise other custom card
+    # resources could be lost on older HA releases.
     if not resources.loaded:
         await resources.async_load()
     integration = await async_get_integration(hass, DOMAIN)
@@ -63,6 +68,8 @@ async def async_register_card_resource(hass: HomeAssistant) -> None:
                 " deleting a user-managed resource. Remove duplicates manually.",
                 len(existing),
             )
+        hass.data["_solarshare_card_resource_registered"] = True
         return
     await resources.async_create_item({"url": url, "res_type": "module"})
-    _LOGGER.info("Registered bundled SolarShare dashboard card")
+    hass.data["_solarshare_card_resource_registered"] = True
+    _LOGGER.info("Registered bundled SolarShare dashboard card: %s", url)
