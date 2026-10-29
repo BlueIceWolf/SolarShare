@@ -475,3 +475,50 @@ python -m unittest tests.test_periods_live -v
 python -m unittest discover -s tests -p 'test_*accounting.py' -v
 ```
 
+
+
+## SolarShare 0.4.1: Karteneditor und Live-Werte pro Einheit
+
+Die SolarShare-Karte hat einen **visuellen Karteneditor** unter
+**Dashboard bearbeiten → SolarShare-Karte bearbeiten**. Ohne YAML kannst
+du Standardzeitraum, sichtbare Zeiträume, Gesamtkennzahlen, die
+Wohnungs-/Wallbox-Bereiche, die Spalten (Verbrauch, Solarstrom,
+Netzstrom, ungeklärte Herkunft, Kosten) und die sichtbaren Einheiten
+auswählen. Einstellungen werden in der Lovelace-Kartenkonfiguration
+gespeichert; bestehende Karten ohne zusätzliche Optionen behalten
+die vorherige Standardansicht. Jede Karte kann eigene Einstellungen
+haben.
+
+Unter **SolarShare → Konfigurieren → Wohnungen / Wallboxen → Bearbeiten**
+ist je Einheit ein optionaler **Live-Leistungssensor (W/kW)** verfügbar.
+Der kWh-Zähler bleibt unabhängig davon erforderlich. Für die Live-
+Gesamtansicht müssen weiterhin die **Live-Leistung**-Quellen des
+Gebäudes konfiguriert werden.
+
+Bei gültigen aktuellen Leistungswerten zeigt die Karte in **Live**
+für jede konfigurierte Einheit:
+
+- ihre aktuelle Leistung in Watt;
+- ihre anteilig berechnete lokale Eigenversorgung und Netzleistung;
+- die momentane Netzunabhängigkeit als Autarkie-Prozentwert.
+
+**Wichtig:** Weil alle Wohnungen dieselbe PV-/Batterieanlage nutzen,
+hat bei rein proportionaler Verteilung jede Wohnung **denselben**
+Autarkie-Prozentsatz wie das Gebäude. Nur die zugeordneten Wattwerte
+unterscheiden sich nach Verbrauch. Damit wird ausdrücklich keine
+individuell physikalisch gemessene Herkunft suggeriert.
+
+Diese Live-Zuordnung ist **nur zur Anzeige**, keine Mieterstromabrechnung.
+Ein positiver Leistungssensor muss aus einem tatsächlichen eigenen
+Stromkreis stammen und darf sich nicht mit anderen Einheiten überlappen.
+Unplausible, fehlende oder zu alte Leistungswerte werden nicht geschätzt.
+Die bestehende persistente kWh-/Kostenabrechnung wird dadurch nicht verändert.
+
+Die Einheiten-Auswahl im Karteneditor ist eine **Darstellungsfilterung,
+keine Zugriffsbeschränkung**. Die zentrale Karte sollte deshalb nur
+für berechtigte Verwaltungsnutzer verwendet werden, nicht als
+Sicherheitsmechanismus für einzelne Mieterdashboards.
+
+Für neue Python-Sensoren ist nach dem Update ein einmaliger
+**Home-Assistant-Core-Neustart** erforderlich. Änderungen an
+den Auswahloptionen der Karte benötigen keinen Core-Neustart.
