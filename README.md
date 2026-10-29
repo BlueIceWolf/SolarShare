@@ -7,7 +7,7 @@
 **Eine Energieanlage, alle Wohnungen, automatisch berechnete Datenpunkte.**
 SolarShare ist eine Home-Assistant-Integration mit einer gemeinsamen Konfiguration
 für PV, Netz und optional Batterie. Die Energie wird in gemeinsam beobachteten
-Intervallen auf die Wohnungen verteilt. Version **0.2.6** ersetzt die frühere
+Intervallen auf die Wohnungen verteilt. Version **0.3.0** baut auf der gemeinsamen Anlage auf und erweitert sie um Wallboxen, Tarife und getrennte Messwerterfassung; Version 0.2.6 ersetzt die frühere
 Einzelzähler-Einrichtung. Es müssen keine separaten Wohnungshelfer erstellt werden.
 
 ## HACS installieren / aktualisieren
@@ -245,7 +245,7 @@ Speicher wird kein neuer Nullstand angelegt. Sichern:
 `.storage/solarshare.<entry_id>` und die HA-Konfiguration.
 
 Die Integration berechnet keine rechtssicheren Rechnungen. Live-RFID-Ladesitzungen,
-Tarife, SOC-Abgleich und ein dauerhaftes Intervall-Auditjournal bleiben separate
+SOC-Abgleich und ein dauerhaftes Intervall-Auditjournal bleiben separate
 Ausbauschritte: [Wallbox-Konzept](docs/WALLBOX.md), [Architektur](docs/ACCOUNTING.md).
 
 ## Entwicklung
@@ -305,5 +305,73 @@ Neustarts, Tages- und PV-Nacht/Tagwechsel unterbrechen das Fenster weiterhin.
 Daten aus diesen Lücken werden nicht nachgetragen. Rückläufige Zählerstände
 werden auch während des Sammelns erkannt. Eine nach einer Stunde weiterhin
 widersprüchliche Bilanz stoppt das Fenster mit der entsprechenden Fehlermeldung.
-Gegenläufige Flüsse innerhalb eines Fensters bleiben von der Verteilung ausgeschlossen.
+Gegenläufige Flüsse innerhalb eines Fensters werden als reale Gesamtverbrauchsmenge erfasst, aber deren Stromherkunft vorsichtshalber als ungeklärt ausgewiesen und nicht bepreist.
 Die optionale strenge Berichtsprüfung behält ihre bisherige kurze Intervallprüfung.
+
+## Erweiterung ab 0.3.0: Wallbox, Zähler, Tarife und Dashboard-Karte
+
+Unter **SolarShare → Konfigurieren → Wallboxen** lassen sich Wallboxen mit
+eigenen kumulativen kWh-Zählern (z. B. einem von EVCC bereitgestellten Gesamtzähler)
+hinzufügen, ändern und pausieren. Jede Wallbox bekommt ein eigenes Home-Assistant-Gerät.
+Die Wallbox darf nicht bereits über den Zähler einer Wohnung mitgemessen werden:
+**Sonst würde derselbe Verbrauch doppelt in der Gebäudebilanz auftauchen.**
+Für einzelne RFID-Ladekarten gibt es noch **keine** belastbare Zuordnung und Abrechnung.
+Eine getrennt gemessene Wallbox kann weiterhin über EVCC betrieben werden.
+
+Der Keller bzw. nicht einzeln gemessene Verbraucher benötigen **keinen**
+fiktiven Zähler. Sie sind zusammen mit Messdifferenzen im Anlagenwert
+**Allgemeinverbrauch und Messdifferenz** enthalten. Dieser Restwert ist kein
+isoliert gemessener Kellerverbrauch.
+
+Neu sind **Gemessener Verbrauch** (Heute / Monat / Jahr / Gesamt) pro Wohnung
+und Wallbox. Diese Zählerwerte werden bei gültigen aufeinanderfolgenden
+Messungen fortgeschrieben, auch wenn die gemeinsame PV-/Netzbilanz gerade
+unklar ist. Bei echten Ausfällen oder Neustarts werden fehlende Zeiträume
+ausdrücklich nicht rekonstruiert. Die alten zugeordneten Werte und die
+bestehende SolarShare-Historie bleiben unverändert.
+
+Unter **SolarShare → Konfigurieren → Strompreise** lassen sich
+Solarstrom- und Netzstrompreis in **€/kWh** eingeben. Ohne eingegebene Preise
+werden keine Kosten berechnet. Ab dann entstehen automatisch Sensoren
+**Kosten zugeordnete Energie** für jede Wohnung/Wallbox. Sie enthalten nur
+sicher zugeordnete Solar- und Netzenergie. Ungeklärte Herkunft wird
+unter `unpriced_kwh` ausgewiesen. Ein angezeigter Betrag ist bei
+`partial_amount: true` **nur ein Teilbetrag** und keine vollständige
+Abrechnung. Tarifänderungen bepreisen nur zukünftige Messintervalle;
+bereits gespeicherte Kosten werden nicht rückwirkend geändert. Grundpreise,
+Netzentgelte und formelle Rechnungslegung sind noch nicht enthalten.
+
+In **Erweiterte Einstellungen** kann die **Bilanztoleranz** (standardmäßig
+0,15 kWh) an grob aktualisierende Zähler angepasst werden. Eine zugelassene
+Unterschreitung der gemessenen Versorgung wird als **ungeklärte Energie**
+und nicht als fiktiver Solar- oder Netzbezug geführt. Schalten Netz oder
+Speicher in einem gemeinsamen Messfenster in beide Richtungen, bleibt der
+Gesamtverbrauch erhalten; die Zuordnung seiner Herkunft bleibt ungeklärt.
+Größere, unplausible Abweichungen unterbrechen weiterhin die
+Herkunftsverteilung. Für die verbindliche Abrechnung sind geeignete
+Messkonzepte und Prüfung der Messgrenzen notwendig.
+
+### SolarShare-Karte über die ganze Seite
+
+Nach Aktualisierung und vollständigem Neustart:
+
+1. Unter **Einstellungen → Dashboards → Ressourcen** das JavaScript-Modul
+   `/solarshare/solarshare-card.js` hinzufügen, Ressourcentyp **JavaScript-Modul**.
+2. Im Dashboard eine **Panel-Ansicht (eine Karte)** anlegen.
+3. Als manuelle Karte eintragen:
+
+```yaml
+type: custom:solarshare-card
+period: month
+```
+
+Die Karte findet automatisch die SolarShare-Geräte und zeigt Wohnungen,
+Wallboxen, gemessene kWh, zugeordnete Solar-/Netzanteile, ungeklärte
+Energie und Kosten sowie die Gebäudewerte. Auf schmalen Displays bleibt die
+Wohnungstabelle horizontal scrollbar. Die Karte ist für die **administrative
+Gesamtansicht** vorgesehen. Sie darf nicht unverändert in für einzelne
+Mieter zugänglichen Dashboards verwendet werden, da sie alle Einheiten zeigt.
+
+**Vor dem Aktualisieren** die Home-Assistant-Konfiguration und
+`.storage/solarshare.site.<entry_id>` sichern; den Integrationseintrag nicht löschen.
+Die neuen Zähler müssen über **Konfigurieren** zugeordnet werden.
