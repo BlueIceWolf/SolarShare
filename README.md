@@ -522,3 +522,37 @@ Sicherheitsmechanismus für einzelne Mieterdashboards.
 Für neue Python-Sensoren ist nach dem Update ein einmaliger
 **Home-Assistant-Core-Neustart** erforderlich. Änderungen an
 den Auswahloptionen der Karte benötigen keinen Core-Neustart.
+
+## SolarShare 0.4.2: überarbeitete Dashboard-Karte (nur Frontend)
+
+Die SolarShare-Karte trennt jetzt klar **Live** und **Historie**. Die
+gewünschten Historienzeiträume bleiben als eigene Filter verfügbar. Die
+**Gebäudekennzahlen** sind kompakter, die Wohnungs-/Wallbox-Tabellen
+sind für helle/dunkle Themes und kleinere Displays optimiert.
+
+- **Verbrauch** statt `Gemessen`, **Solarstrom**, **Netzstrom**,
+  **Ungeklärt** und **Kosten** mit besseren Kopfzeilen und Erklärungen.
+- **Teilbeträge** werden neben dem Betrag mit kleinem **„Teil“**-Hinweis
+  angezeigt; ein Tooltip erklärt, dass es sich nicht um eine vollständige
+  Abrechnung handelt.
+- **Wichtig zur Bilanz:** unabhängig beobachteter Zählerverbrauch und
+  aus vollständigen Intervallen zugeordnete Energiemengen können
+  auseinanderliegen. Die Karte weist darauf hin, statt die Werte
+  heimlich glattzurechnen.
+- In der Live-Ansicht bleiben die **proportionale Aufteilung**,
+  der gemeinsame Autarkie-Prozentsatz und die zugeordneten Wattwerte
+  unverändert. Bei **0 W Verbrauch** wird in der **Anzeige** keine
+  mathematisch bedeutungslose Wohnungsquote mehr dargestellt.
+- Alle Einstellungen des bestehenden visuellen Karteneditors
+  (`period`, `periods`, `sections`, `overview`, `columns`, `units`)
+  bleiben kompatibel.
+
+**Keine Änderung an Python-Abrechnung, Tarifen, kWh-Speicher oder
+Wohnungszuordnung.** Deshalb ist für die reine Kartenansicht kein
+Home-Assistant-Core-Neustart erforderlich, wenn Home Assistant bereits
+den SolarShare-Card-Pfad bereitstellt. Nach Aktualisierung über HACS
+Dashboard neu laden; falls der Browser die alte Datei verwendet, unter
+**Einstellungen → Dashboards → Ressourcen** die vorhandene SolarShare-
+Ressource mit `?v=0.4.2` versehen und den Browser neu laden. Die
+automatische Ressourcenversionsanpassung beim Home-Assistant-Neustart
+funktioniert unverändert.
