@@ -41,6 +41,8 @@ class SiteLedger:
         pv_keys=("pv",),
         require_fresh_reports=True,
         aggregation_seconds=0,
+        balance_tolerance_kwh="0.02",
+        allow_mixed_directions=False,
     ):
         self.apartment_ids = tuple(apartment_ids)
         self.pv_keys = tuple(pv_keys)
@@ -50,6 +52,10 @@ class SiteLedger:
         self.skew = float(skew)
         self.require_fresh_reports = require_fresh_reports
         self.aggregation_seconds = max(0, int(aggregation_seconds))
+        self.balance_tolerance = Decimal(str(balance_tolerance_kwh))
+        if not self.balance_tolerance.is_finite() or not ZERO <= self.balance_tolerance <= 2:
+            raise ValueError("Invalid energy balance tolerance")
+        self.allow_mixed_directions = bool(allow_mixed_directions)
         self.last_observation = None
         self.last_readings = None
         self.pending_seconds = 0
@@ -197,6 +203,7 @@ class SiteLedger:
                 - deltas.get("charge", ZERO)
             ),
             "apartments_kwh": str(sum((deltas[f"apt:{key}"] for key in self.apartment_ids), ZERO)),
+            "tolerance_kwh": str(self.balance_tolerance),
         }
         # Coarse cumulative registers must share an observation window with the
         # fine apartment counters. Waiting keeps the original baseline; it does
@@ -237,10 +244,14 @@ class SiteLedger:
             "apartments": allocation,
             "site": site,
             "seconds": Decimal(str(now - self.frame_time)),
+            "ambiguous": ((deltas["import"] > 0 and deltas["export"] > 0)
+                          or (deltas.get("charge", ZERO) > 0 and deltas.get("discharge", ZERO) > 0)),
         }
         self.baseline, self.baseline_times = current, times
         self.frame_time, self.baseline_day = now, day
-        self.available, self.reason = True, "observing"
+        self.available, self.reason = True, (
+            "observing_ambiguous_interval" if self.interval.get("ambiguous") else "observing"
+        )
         return True
 
     def allocate(self, delta):
@@ -251,20 +262,39 @@ class SiteLedger:
         """
         pv, imported, exported = (delta[key] for key in ("pv", "import", "export"))
         charge, discharge = (delta.get(key, ZERO) for key in ("charge", "discharge"))
-        if (imported > 0 and exported > 0) or (charge > 0 and discharge > 0):
+        mixed = (imported > 0 and exported > 0) or (charge > 0 and discharge > 0)
+        if mixed and not self.allow_mixed_directions:
             raise ValueError("mixed_direction_interval")
-        if exported > pv:
+        if exported > pv and not (mixed and self.allow_mixed_directions):
             raise ValueError("unresolved_export_origin")
         load = pv + imported + discharge - exported - charge
         apartment_load = sum((delta[f"apt:{key}"] for key in self.apartment_ids), ZERO)
         if (
             load < 0
             or (load == 0 and apartment_load > 0)
-            or apartment_load > load + Decimal("0.02")
+            or apartment_load > load + self.balance_tolerance
         ):
             raise ValueError("inconsistent_energy_balance")
         denominator = max(load, apartment_load)
         unknown_balance = denominator - load
+        if mixed:
+            # Net cumulative counts show total energy, but not which direction
+            # occurred while a particular apartment was drawing power. Preserve
+            # the consumption without inventing a solar/grid billing split.
+            allocations = {
+                key: dict(consumption=delta[f"apt:{key}"], solar=ZERO,
+                          direct_solar=ZERO, grid=ZERO, battery=ZERO,
+                          unknown=delta[f"apt:{key}"])
+                for key in self.apartment_ids
+            }
+            site = {
+                "pv": pv, "import": imported, "export": exported,
+                "charge": charge, "discharge": discharge,
+                "consumption": load, "residual": max(load - apartment_load, ZERO),
+            }
+            pools = {"solar": ZERO, "grid": ZERO,
+                     "unknown": self.capacity if self.battery else ZERO}
+            return allocations, site, pools
         direct = min(pv - exported, max(load - discharge, ZERO))
         grid_direct = load - direct - discharge
         if grid_direct < 0:
