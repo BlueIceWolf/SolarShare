@@ -31,6 +31,19 @@ def energy_selector(multiple=False):
     )
 
 
+def validate_power_source(hass, entity_id):
+    if not entity_id:
+        return None
+    source = er.async_get(hass).async_get(entity_id)
+    if source and source.platform == DOMAIN:
+        return "recursive_meter"
+    state = hass.states.get(entity_id)
+    if state and state.state not in ("unknown", "unavailable"):
+        if state.attributes.get("device_class") != "power" or state.attributes.get("unit_of_measurement") not in ("W", "kW"):
+            return "not_power"
+    return None
+
+
 def validate_source(hass, entity_id):
     source = er.async_get(hass).async_get(entity_id)
     if source and source.platform == DOMAIN:
@@ -66,6 +79,13 @@ def validate_config(hass, config, entry_id=None):
         return "duplicate_meter"
     for meter in meters:
         if error := validate_source(hass, meter):
+            return error
+    powers = [item["power"] for group in ("apartments", "wallboxes")
+              for item in config.get(group, []) if item.get("power") and not item.get("paused")]
+    if len(powers) != len(set(powers)):
+        return "duplicate_power"
+    for power in powers:
+        if error := validate_power_source(hass, power):
             return error
     details = pv_entities(config.get("pv_details"))
     if len(details) != len(set(details)):
@@ -452,6 +472,7 @@ class InstallationWizard:
                 "id": current.get("id", uuid4().hex),
                 "name": user_input["name"].strip(),
                 "meter": user_input["meter"],
+                "power": user_input.get("power") or "",
                 "paused": user_input.get("paused", False),
             }
             if user_input.get("remove"):
@@ -463,6 +484,8 @@ class InstallationWizard:
                 errors["name"] = "empty_name"
             elif error := validate_source(self.hass, data["meter"]):
                 errors["meter"] = error
+            elif error := validate_power_source(self.hass, data["power"]):
+                errors["power"] = error
             elif not data["paused"] and (
                 data["meter"] in source_entities(self.site["sources"])
                 or any(
@@ -486,6 +509,9 @@ class InstallationWizard:
                 "meter", **({"default": defaults["meter"]} if defaults.get("meter") else {})
             ): energy_selector(),
             probatio.Optional("paused", default=defaults.get("paused", False)): bool,
+            probatio.Optional(
+                "power", **({"default": defaults["power"]} if defaults.get("power") else {})
+            ): power_selector(),
         }
         if current:
             fields[probatio.Optional("remove", default=False)] = bool
@@ -600,6 +626,7 @@ class InstallationWizard:
                 "id": current.get("id", uuid4().hex),
                 "name": user_input["name"].strip(),
                 "meter": user_input["meter"],
+                "power": user_input.get("power") or "",
                 "paused": user_input.get("paused", False),
                 "kind": "wallbox",
             }
@@ -612,6 +639,8 @@ class InstallationWizard:
                 errors["name"] = "empty_name"
             elif error := validate_source(self.hass, data["meter"]):
                 errors["meter"] = error
+            elif error := validate_power_source(self.hass, data["power"]):
+                errors["power"] = error
             elif not data["paused"] and (
                 data["meter"] in source_entities(self.site["sources"])
                 or any(
@@ -637,6 +666,9 @@ class InstallationWizard:
                 "meter", **({"default": defaults["meter"]} if defaults.get("meter") else {})
             ): energy_selector(),
             probatio.Optional("paused", default=defaults.get("paused", False)): bool,
+            probatio.Optional(
+                "power", **({"default": defaults["power"]} if defaults.get("power") else {})
+            ): power_selector(),
         }
         if current:
             fields[probatio.Optional("remove", default=False)] = bool
