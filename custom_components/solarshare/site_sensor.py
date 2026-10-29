@@ -187,12 +187,14 @@ class EnergyCostPoint(SiteEntity):
             if bucket else None
         )
         uncovered = max((observed or Decimal(0)) - (allocated or Decimal(0)), Decimal(0))
+        not_priced = max((allocated or Decimal(0)) - amounts["covered_kwh"], Decimal(0))
         return {
             "solar_cost_eur": str(amounts["solar_eur"]),
             "grid_cost_eur": str(amounts["grid_eur"]),
             "unpriced_kwh": str(amounts["unpriced_kwh"]),
             "observed_not_allocated_kwh": str(uncovered),
-            "partial_amount": bool(amounts["unpriced_kwh"] or uncovered),
+            "allocated_before_tariff_kwh": str(not_priced),
+            "partial_amount": bool(amounts["unpriced_kwh"] or uncovered or not_priced),
             "accounting_scope": "priced_verified_intervals_only",
             "price_history": "rates_at_time_of_allocation",
         }
