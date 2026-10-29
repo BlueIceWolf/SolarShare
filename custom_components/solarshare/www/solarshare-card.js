@@ -19,6 +19,13 @@ class SolarShareCard extends HTMLElement {
     this.render();
   }
   static getStubConfig() { return {period: "month"}; }
+  static getConfigElement() { return document.createElement("solarshare-card-editor"); }
+  selected(key, defaults) {
+    return Array.isArray(this.config[key]) ? this.config[key] : defaults;
+  }
+  visibleSection(name) {
+    return this.selected("sections", ["overview","apartments","wallboxes","live_site","live_units"]).includes(name);
+  }
   getCardSize() { return 8; }
   async load() {
     if (!this._hass || this.loading) return;
@@ -70,11 +77,16 @@ class SolarShareCard extends HTMLElement {
   }
   section(items, label) {
     if (!items.length) return "";
+    const available = [
+      ["observed","Gemessen"], ["solar","Solar"], ["grid","Netz"],
+      ["unknown","Ungeklärt"], ["priced_energy_cost","Kosten"]
+    ];
+    const metrics = available.filter(([key]) => this.selected("columns", available.map(c => c[0])).includes(key));
+    if (!metrics.length) return "";
     const rows = items.map(device => {
-      const metrics = ["observed", "solar", "grid", "unknown", "priced_energy_cost"];
-      const cells = metrics.map((metric, index) => {
+      const cells = metrics.map(([metric]) => {
         const entity = this.find(device.id, metric);
-        const cost = index === 4;
+        const cost = metric === "priced_energy_cost";
         const state = this.state(entity);
         const partial = cost && state && Boolean(state.attributes.partial_amount);
         return '<td data-entity="' + this.esc(entity ? entity.entity_id : "") + '">' +
@@ -82,9 +94,36 @@ class SolarShareCard extends HTMLElement {
       }).join("");
       return "<tr><th>" + this.esc(device.name || "Unbenannt") + "</th>" + cells + "</tr>";
     }).join("");
+    const headers = metrics.map(([,label]) => "<th>" + this.esc(label) + "</th>").join("");
     return '<section><h3>' + this.esc(label) + '</h3><div class="scroll"><table>' +
-      "<thead><tr><th>Einheit</th><th>Gemessen</th><th>Solar</th><th>Netz</th><th>Ungeklärt</th><th>Kosten</th></tr></thead>" +
+      "<thead><tr><th>Einheit</th>" + headers + "</tr></thead>" +
       "<tbody>" + rows + "</tbody></table></div></section>";
+  }
+  liveUnitSection(devices, label) {
+    if (!devices.length) return "";
+    const findLive = device => this.entities.find(e =>
+      e.device_id === device.id && e.unique_id.endsWith("_live_autarky"));
+    const cards = devices.map(device => {
+      const entity = findLive(device);
+      const state = this.state(entity);
+      const number = state ? Number(state.state) : NaN;
+      const valid = Number.isFinite(number) && state.attributes.status === "live";
+      const percent = valid ? Math.max(0, Math.min(100, number)) : 0;
+      const watt = n => typeof n === "number" && Number.isFinite(n)
+        ? new Intl.NumberFormat("de-DE", {maximumFractionDigits:0}).format(n) + " W"
+        : "—";
+      return '<div class="unit-card"><div class="unit-name">' + this.esc(device.name || "Einheit") +
+        '</div><div class="unit-pct">' + (valid ? this.esc(percent.toLocaleString("de-DE") + " %") : "—") +
+        '</div><div class="unit-progress"><div style="width:' + percent + '%"></div></div>' +
+        '<div class="unit-detail">Verbrauch <strong>' + this.esc(watt(state?.attributes?.power_w)) + '</strong></div>' +
+        '<div class="unit-detail">Eigenversorgung <strong>' + this.esc(watt(state?.attributes?.local_w)) + '</strong></div>' +
+        '<div class="unit-detail">Netz <strong>' + this.esc(watt(state?.attributes?.grid_w)) + '</strong></div>' +
+        (!valid ? '<div class="note">Leistungssensor fehlt oder ist nicht aktuell</div>' : '') +
+        '</div>';
+    }).join("");
+    return '<section><h3>' + this.esc(label) + '</h3><div class="unit-grid">' + cards +
+      '</div><p class="note">Anteilige Live-Zuordnung aus dem gemeinsamen Gebäude. ' +
+      'Alle Einheiten haben bei proportionaler Verteilung denselben Autarkie-Prozentsatz.</p></section>';
   }
   render() {
     if (!this.shadowRoot || !this.config) return;
@@ -105,6 +144,12 @@ class SolarShareCard extends HTMLElement {
       ".live-inner{width:120px;height:120px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--card-background-color)}",
       ".live-inner strong{font-size:30px}.live-details{display:flex;flex-direction:column;gap:8px}",
       ".live-details span{color:var(--secondary-text-color);font-size:13px}",
+      ".unit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}",
+      ".unit-card{padding:14px;border-radius:12px;background:var(--card-background-color)}",
+      ".unit-name{font-size:14px;font-weight:600}.unit-pct{font-size:24px;font-weight:700;margin:8px 0}",
+      ".unit-progress{height:7px;border-radius:8px;background:var(--divider-color);overflow:hidden;margin-bottom:12px}",
+      ".unit-progress>div{height:100%;background:var(--success-color,#16a34a)}",
+      ".unit-detail{display:flex;justify-content:space-between;gap:6px;font-size:12px;padding:4px 0}",
       "section{margin-top:12px}.scroll{overflow:auto}",
       "table{width:100%;border-collapse:collapse;text-align:right;min-width:690px}",
       "td,th{padding:11px 8px;border-bottom:1px solid var(--divider-color);font-variant-numeric:tabular-nums}",
@@ -120,44 +165,55 @@ class SolarShareCard extends HTMLElement {
       return;
     }
     const names = {live:"Live",day:"Heute",week:"Diese Woche",last_week:"Letzte Woche",month:"Dieser Monat",last_month:"Letzter Monat",year:"Jahr",lifetime:"Gesamt"};
-    const periods = Object.entries(names).map(([id,label]) =>
+    const visiblePeriods = this.selected("periods", Object.keys(names));
+    if (visiblePeriods.length && !visiblePeriods.includes(this.period)) this.period = visiblePeriods[0];
+    const periods = Object.entries(names).filter(([id]) => visiblePeriods.includes(id)).map(([id,label]) =>
       '<button data-period="' + id + '" class="' + (id === this.period ? "on" : "") + '">' + label + "</button>"
     ).join("");
     const devices = Array.from(this.devices.values()).filter(d =>
-      ["Wohnung","Wallbox"].includes(d.model) && this.entities.some(e => e.device_id === d.id));
-    let body;
+      ["Wohnung","Wallbox"].includes(d.model) && d.manufacturer === "SolarShare" &&
+      this.entities.some(e => e.device_id === d.id) &&
+      this.selected("units", Array.from(this.devices.values()).map(x => x.id)).includes(d.id));
+    const apartments = devices.filter(d => d.model === "Wohnung");
+    const wallboxes = devices.filter(d => d.model === "Wallbox");
+    let body = "";
     if (this.period === "live") {
       const live = this.live();
       const autarky = live ? Number(live.state) : NaN;
-      if (Number.isFinite(autarky)) {
-        const pct = Math.max(0, Math.min(100, autarky));
-        const load = Number(live.attributes.load_w);
-        const imported = Number(live.attributes.import_w);
-        const formatPower = n => Number.isFinite(n)
-          ? new Intl.NumberFormat("de-DE", {maximumFractionDigits:0}).format(n) + " W" : "—";
-        body = '<section><h3>Autarkie gerade</h3><div class="live">' +
-          '<div class="live-gauge" style="background:conic-gradient(var(--success-color,#16a34a) ' + pct + '%,var(--divider-color) 0)">' +
-          '<div class="live-inner"><strong>' + this.esc(pct.toLocaleString("de-DE")) + ' %</strong><span class="sub">Autarkie</span></div></div>' +
-          '<div class="live-details"><div>Gebäudeverbrauch <strong>' + this.esc(formatPower(load)) + '</strong></div>' +
-          '<div>Netzbezug <strong>' + this.esc(formatPower(imported)) + '</strong></div>' +
-          '<span>Live aus Leistungssensoren · Netzunabhängigkeit, keine Abrechnungsgröße</span></div>' +
-          '</div></section>';
-      } else {
-        body = '<section><h3>Autarkie gerade</h3><p>Keine aktuellen Leistungswerte verfügbar.</p>' +
-          '<p class="note">Unter SolarShare → Konfigurieren → Live-Leistung den Gebäudeverbrauch und Netzbezug in Watt zuordnen. ' +
-          'Alternativ PV, Netzbezug, Einspeisung und bei einem Speicher dessen Lade-/Entladeleistung angeben.</p></section>';
+      if (this.visibleSection("live_site")) {
+        if (Number.isFinite(autarky)) {
+          const pct = Math.max(0, Math.min(100, autarky));
+          const load = Number(live.attributes.load_w);
+          const imported = Number(live.attributes.import_w);
+          const formatPower = n => Number.isFinite(n)
+            ? new Intl.NumberFormat("de-DE", {maximumFractionDigits:0}).format(n) + " W" : "—";
+          body += '<section><h3>Autarkie gerade</h3><div class="live">' +
+            '<div class="live-gauge" style="background:conic-gradient(var(--success-color,#16a34a) ' + pct + '%,var(--divider-color) 0)">' +
+            '<div class="live-inner"><strong>' + this.esc(pct.toLocaleString("de-DE")) + ' %</strong><span class="sub">Autarkie</span></div></div>' +
+            '<div class="live-details"><div>Gebäudeverbrauch <strong>' + this.esc(formatPower(load)) + '</strong></div>' +
+            '<div>Netzbezug <strong>' + this.esc(formatPower(imported)) + '</strong></div>' +
+            '<span>Aktuelle Netzunabhängigkeit · Keine Abrechnungsgröße</span></div></div></section>';
+        } else {
+          body += '<section><h3>Autarkie gerade</h3><p>Keine aktuellen Leistungswerte verfügbar.</p>' +
+            '<p class="note">Unter SolarShare → Konfigurieren → Live-Leistung den Gebäudeverbrauch und Netzbezug in Watt zuordnen.</p></section>';
+        }
+      }
+      if (this.visibleSection("live_units")) {
+        if (this.visibleSection("apartments")) body += this.liveUnitSection(apartments,"Wohnungen – Live");
+        if (this.visibleSection("wallboxes")) body += this.liveUnitSection(wallboxes,"Wallboxen – Live");
       }
     } else {
       const stats = [["PV-Erzeugung","pv"],["Netzbezug","import"],
         ["Gebäudeverbrauch","consumption"],["Allgemeinverbrauch / Messdifferenz","residual"]]
+        .filter(([,metric]) => this.selected("overview",["pv","import","consumption","residual"]).includes(metric))
         .map(([name,metric]) => '<div class="stat"><span>' + name + '</span><strong>' +
           this.esc(this.value(this.site(metric), false)) + "</strong></div>").join("");
-      body = '<div class="stats">' + stats + "</div>" +
-        this.section(devices.filter(d => d.model === "Wohnung"), "Wohnungen") +
-        this.section(devices.filter(d => d.model === "Wallbox"), "Wallboxen") +
-        '<p class="note">Gemessen: unabhängig erfasste kWh. Kosten nur für eindeutig zugeordnete Energie. ' +
-        'Ungeklärt: nicht preislich zugeordnete Herkunft. Allgemeinverbrauch enthält auch ungemessene Bereiche wie den Keller. ' +
-        'Vorperioden enthalten ausschließlich seit Einführung dieser Messfenster erfasste Werte.</p>';
+      if (stats && this.visibleSection("overview")) body += '<div class="stats">' + stats + "</div>";
+      if (this.visibleSection("apartments")) body += this.section(apartments,"Wohnungen");
+      if (this.visibleSection("wallboxes")) body += this.section(wallboxes,"Wallboxen");
+      body += '<p class="note">Kosten nur für eindeutig zugeordnete Energie. ' +
+        'Allgemeinverbrauch enthält auch nicht gemessene Bereiche wie den Keller. ' +
+        'Vorperioden enthalten nur seit ihrer Einführung erfasste Werte.</p>';
     }
     this.shadowRoot.innerHTML = "<style>" + css + "</style><ha-card>" +
       '<div class="top"><div><h2>☀ SolarShare</h2><div class="sub">Strom & Kosten je Einheit</div></div>' +
