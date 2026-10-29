@@ -93,7 +93,8 @@
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
           "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten",
-          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln"
+          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln",
+          "balance_tolerance_kwh": "Zähler-Bilanztoleranz (kWh)"
         }
       },
       "site_menu": {
@@ -282,7 +283,8 @@
           "alignment_seconds": "Maximaler Zeitversatz der Zählerberichte (Sekunden)",
           "acknowledge": "Zähler geprüft: Prüfsperre aufheben und neue Messbasis setzen",
           "require_fresh_reports": "Strenge Frischeprüfung: alle Zähler müssen regelmäßig berichten",
-          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln"
+          "pv_night_sleep": "PV-Wechselrichter schlafen nachts: fehlende PV-Stände nachts als 0 Ertragszuwachs behandeln",
+          "balance_tolerance_kwh": "Zähler-Bilanztoleranz (kWh)"
         }
       },
       "site_menu": {
