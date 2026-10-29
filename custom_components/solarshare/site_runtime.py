@@ -21,6 +21,7 @@ from .tariff_accounting import TariffLedger
 from .pv_night import PVNight
 from .pv_sources import overlapping_growatt_totals, source_meters, total_pv
 from .site_accounting import SiteLedger
+from .site_live import live_autarky
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +33,11 @@ class SiteRuntime:
         self.options = dict(entry.options)
         self.signal = f"{DOMAIN}_{entry.entry_id}"
         self.meters = source_meters(self.config["sources"])
+        self.live_power_sources = self.config.get("live_power", {})
+        self.live_power_ids = [
+            item for value in self.live_power_sources.values()
+            for item in (value if isinstance(value, list) else [value]) if item
+        ]
         self.pv_keys = tuple(key for key in self.meters if key == "pv" or key.startswith("pv:"))
         self.night = PVNight(self.pv_keys, enabled=self.config.get("pv_night_sleep", True))
         self.apartments = self.config["apartments"]
@@ -120,7 +126,7 @@ class SiteRuntime:
         self.active = True
         self.unsubs = [
             async_track_state_change_event(
-                self.hass, [*self.meters.values(), "sun.sun"], self._changed
+                self.hass, [*self.meters.values(), *self.live_power_ids, "sun.sun"], self._changed
             ),
             async_track_time_interval(self.hass, self._tick, timedelta(seconds=60)),
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._shutdown),
@@ -136,6 +142,11 @@ class SiteRuntime:
             old = event.data.get("old_state")
             if old is None or state is None or old.state != state.state:
                 self._queue()
+            return
+        if event.data["entity_id"] in self.live_power_ids:
+            # Live power updates the display immediately without restarting the
+            # slower, persistent kWh allocation window.
+            async_dispatcher_send(self.hass, self.signal)
             return
         # Evaluate invalid states immediately. Valid states are sampled together
         # on the common timer, rather than assigning an event from one apartment.
@@ -172,6 +183,40 @@ class SiteRuntime:
     @callback
     def _tick(self, now):
         self._queue()
+
+
+    def live_metrics(self):
+        """Read live power safely without persisting display-only estimates."""
+        power = {}
+        now = time.time()
+        for role, entity_ids in self.live_power_sources.items():
+            ids = entity_ids if isinstance(entity_ids, list) else [entity_ids]
+            if not ids:
+                continue
+            values = []
+            for entity_id in ids:
+                if not entity_id:
+                    continue
+                state = self.hass.states.get(entity_id)
+                if (state is None or state.state in ("unknown", "unavailable")
+                        or state.attributes.get("restored")):
+                    return None
+                stamp = getattr(state, "last_reported", None)
+                if stamp is None or not 0 <= now - stamp.timestamp() <= 300:
+                    return None
+                unit = state.attributes.get("unit_of_measurement")
+                if state.attributes.get("device_class") != "power" or unit not in ("W", "kW"):
+                    return None
+                try:
+                    value = float(state.state) * (1000 if unit == "kW" else 1)
+                except (ValueError, TypeError):
+                    return None
+                if not 0 <= value <= 1000000 or value != value:
+                    return None
+                values.append(value)
+            if values:
+                power[role] = sum(values)
+        return live_autarky(power, battery=self.ledger.battery)
 
     def _sun_state(self):
         sun = self.hass.states.get("sun.sun")
