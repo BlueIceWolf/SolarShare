@@ -95,6 +95,7 @@ class InstallationWizard:
                     "pv_details": [],
                     "require_fresh_reports": False,
                     "pv_night_sleep": True,
+                    "balance_tolerance_kwh": 0.15,
                 }.items()
             }
         )
@@ -362,6 +363,16 @@ class InstallationWizard:
             probatio.Optional("require_fresh_reports", default=self.site["require_fresh_reports"])
         ] = bool
         fields[probatio.Optional("pv_night_sleep", default=self.site["pv_night_sleep"])] = bool
+        fields[probatio.Required(
+            "balance_tolerance_kwh",
+            default=self.site.get("balance_tolerance_kwh", 0.15),
+        )] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=2, step=0.01,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="kWh",
+            )
+        )
         return self.async_show_form(step_id="advanced", data_schema=probatio.Schema(fields))
 
     async def async_step_site_menu(self, user_input=None):
