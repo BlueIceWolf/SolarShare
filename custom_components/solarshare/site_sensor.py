@@ -43,6 +43,7 @@ def entities(entry):
                 continue
             result.append(EnergyPoint(entry, metric, period))
         for apartment in runtime.units:
+            result.append(ObservedEnergyPoint(entry, period, apartment))
             for metric in APARTMENT_METRICS:
                 result.append(EnergyPoint(entry, metric, period, apartment))
     for key in runtime.meters:
@@ -92,6 +93,51 @@ class SiteEntity(SensorEntity):
             "source_sampling": "fresh_reports"
             if self.runtime.config.get("require_fresh_reports", False)
             else "available_counter_snapshots",
+        }
+
+
+class ObservedEnergyPoint(SiteEntity):
+    """Metered usage independent of site PV/grid balance."""
+
+    _attr_icon = "mdi:counter"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
+    def __init__(self, entry, period, unit):
+        self.period = period
+        self.unit = unit
+        super().__init__(
+            entry, f"{unit['id']}_observed_{period}",
+            f"Gemessener Verbrauch {PERIODS[period]}", unit,
+        )
+        self._attr_state_class = (
+            SensorStateClass.TOTAL_INCREASING
+            if period == "lifetime" else SensorStateClass.TOTAL
+        )
+
+    @property
+    def native_value(self):
+        value = self.runtime.observed.value(
+            self.unit["id"], self.period, dt_util.now().date().isoformat()
+        )
+        return round(value, 6) if value is not None else None
+
+    @property
+    def available(self):
+        key = f"apt:{self.unit['id']}"
+        return (
+            not self.unit.get("paused")
+            and self.runtime.readings.get(key) is not None
+            and self.native_value is not None
+        )
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "accounting_scope": "complete_observed_meter_intervals_only",
+            "allocation_status": self.runtime.ledger.reason,
+            "meter": self.unit["meter"],
+            "gap_count": self.runtime.observed.gaps.get(self.unit["id"], 0),
         }
 
 
@@ -233,6 +279,15 @@ class SiteStatus(SiteEntity):
         result["aggregation_seconds"] = self.runtime.ledger.aggregation_seconds
         result["pending_seconds"] = self.runtime.ledger.pending_seconds
         result["pending_balance"] = self.runtime.ledger.pending_balance
+        if result["pending_balance"]:
+            balance = result["pending_balance"]
+            result["pending_difference_kwh"] = str(
+                Decimal(balance["supply_kwh"]) - Decimal(balance["apartments_kwh"])
+            )
+        result["unmetered_consumption_note"] = (
+            "Positive residual includes unmetered loads such as cellar and measurement differences; "
+            "these cannot be separated without a dedicated meter."
+        )
         result["pv_night_sleep"] = self.runtime.night.enabled
         result["sun_state"] = self.runtime._sun_state()
         result["pv_night_assumed_zero"] = [
