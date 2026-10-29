@@ -355,9 +355,9 @@ Messkonzepte und Prüfung der Messgrenzen notwendig.
 
 Nach Aktualisierung und vollständigem Neustart:
 
-Ab **0.3.1** installiert SolarShare die mitgelieferte Dashboard-Karte und
-registriert sie bei standardmäßiger Lovelace-Ressourcenverwaltung (**Storage/UI**)
-automatisch als JavaScript-Modul. Es ist keine zusätzliche HACS-Installation und
+Ab **0.3.2** installiert SolarShare die mitgelieferte Dashboard-Karte und
+registriert sie direkt beim Start mit bereits geladenem Lovelace bei standardmäßiger
+Ressourcenverwaltung (**Storage/UI**) automatisch als JavaScript-Modul. Es ist keine zusätzliche HACS-Installation und
 kein manueller Eintrag unter **Dashboard → Ressourcen** nötig. Bereits vorhandene
 Einträge für dieselbe Karte werden aktualisiert statt doppelt angelegt;
 andere Dashboard-Ressourcen bleiben unverändert.
@@ -380,7 +380,7 @@ diesem Fall unter `lovelace.resources` selbst hinzufügen:
 lovelace:
   resource_mode: yaml
   resources:
-    - url: /solarshare/solarshare-card.js?v=0.3.1
+    - url: /solarshare/solarshare-card.js?v=0.3.2
       type: module
 ```
 
@@ -397,3 +397,20 @@ Mieter zugänglichen Dashboards verwendet werden, da sie alle Einheiten zeigt.
 **Vor dem Aktualisieren** die Home-Assistant-Konfiguration und
 `.storage/solarshare.site.<entry_id>` sichern; den Integrationseintrag nicht löschen.
 Die neuen Zähler müssen über **Konfigurieren** zugeordnet werden.
+
+### Wenn „Custom element doesn't exist: solarshare-card“ erscheint
+
+1. Über HACS **SolarShare 0.3.2 oder neuer** installieren und Home Assistant
+   vollständig neu starten.
+2. Unter **Einstellungen → Dashboards → Ressourcen** prüfen, ob **genau ein**
+   Modul mit `/solarshare/solarshare-card.js?v=0.3.2` eingetragen ist.
+3. Im gleichen Home-Assistant-System die Adresse
+   `/solarshare/solarshare-card.js?v=0.3.2` aufrufen. Sie muss JavaScript statt
+   einer 404- oder Login-Fehlerseite zeigen.
+4. Dashboard neu laden, bei Bedarf Browsercache umgehen (Strg+F5).
+
+Wird die Ressource bei **Storage/UI** noch nicht eingetragen, kann sie unter
+**Dashboards → Ressourcen** einmal manuell mit dem oben genannten Pfad als
+**JavaScript-Modul** ergänzt werden. Der Integrationseintrag und die
+bereits aufgezeichneten Energie-/Kostenwerte müssen dafür nicht gelöscht werden.
+Bei YAML-Ressourcen die Konfiguration wie oben beschrieben anpassen.
