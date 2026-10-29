@@ -486,6 +486,13 @@ class InstallationWizard:
                 errors["meter"] = error
             elif error := validate_power_source(self.hass, data["power"]):
                 errors["power"] = error
+            elif data["power"] and not data["paused"] and any(
+                unit["id"] != data["id"] and not unit.get("paused")
+                and unit.get("power") == data["power"]
+                for group in ("apartments", "wallboxes")
+                for unit in self.site.get(group, [])
+            ):
+                errors["power"] = "duplicate_power"
             elif not data["paused"] and (
                 data["meter"] in source_entities(self.site["sources"])
                 or any(
@@ -641,6 +648,13 @@ class InstallationWizard:
                 errors["meter"] = error
             elif error := validate_power_source(self.hass, data["power"]):
                 errors["power"] = error
+            elif data["power"] and not data["paused"] and any(
+                unit["id"] != data["id"] and not unit.get("paused")
+                and unit.get("power") == data["power"]
+                for group in ("apartments", "wallboxes")
+                for unit in self.site.get(group, [])
+            ):
+                errors["power"] = "duplicate_power"
             elif not data["paused"] and (
                 data["meter"] in source_entities(self.site["sources"])
                 or any(
