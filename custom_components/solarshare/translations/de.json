@@ -110,7 +110,8 @@
           "advanced": "Erweiterte Einstellungen",
           "finish": "Zusammenfassung",
           "wallboxes": "Wallboxen",
-          "tariffs": "Strompreise"
+          "tariffs": "Strompreise",
+          "live_power": "Live-Leistung"
         }
       },
       "finish": {
@@ -167,6 +168,18 @@
         "data": {
           "solar": "Solarstrom (€/kWh)",
           "grid": "Netzstrom (€/kWh)"
+        }
+      },
+      "live_power": {
+        "title": "Live-Leistung / Autarkie",
+        "description": "**Option A (einfach):** Gebäudeverbrauch und positiven Netzbezug in Watt angeben. **Option B:** PV-Leistungen (auch mehrere Wechselrichter), Netzbezug und Einspeisung angeben; mit Speicher zusätzlich Lade- und Entladeleistung. Alle Werte als nichtnegative Leistungssensoren (W/kW). *Keinen vorzeichenbehafteten Netzleistungssensor als positiven Netzbezug zuordnen.* Fehlende, veraltete oder widersprüchliche Werte werden nicht geschätzt. Die Live-Autarkie beschreibt Netzunabhängigkeit, nicht die gespeicherte Batterieherkunft.",
+        "data": {
+          "load": "Gebäudeverbrauch (W, optional)",
+          "import": "Netzbezug (W)",
+          "pv": "PV-Leistung der Wechselrichter (W)",
+          "export": "Einspeisung (W)",
+          "charge": "Batterieladung (W)",
+          "discharge": "Batterieentladung (W)"
         }
       }
     },
@@ -300,7 +313,8 @@
           "advanced": "Erweiterte Einstellungen",
           "finish": "Zusammenfassung",
           "wallboxes": "Wallboxen",
-          "tariffs": "Strompreise"
+          "tariffs": "Strompreise",
+          "live_power": "Live-Leistung"
         }
       },
       "finish": {
@@ -357,6 +371,18 @@
         "data": {
           "solar": "Solarstrom (€/kWh)",
           "grid": "Netzstrom (€/kWh)"
+        }
+      },
+      "live_power": {
+        "title": "Live-Leistung / Autarkie",
+        "description": "**Option A (einfach):** Gebäudeverbrauch und positiven Netzbezug in Watt angeben. **Option B:** PV-Leistungen (auch mehrere Wechselrichter), Netzbezug und Einspeisung angeben; mit Speicher zusätzlich Lade- und Entladeleistung. Alle Werte als nichtnegative Leistungssensoren (W/kW). *Keinen vorzeichenbehafteten Netzleistungssensor als positiven Netzbezug zuordnen.* Fehlende, veraltete oder widersprüchliche Werte werden nicht geschätzt. Die Live-Autarkie beschreibt Netzunabhängigkeit, nicht die gespeicherte Batterieherkunft.",
+        "data": {
+          "load": "Gebäudeverbrauch (W, optional)",
+          "import": "Netzbezug (W)",
+          "pv": "PV-Leistung der Wechselrichter (W)",
+          "export": "Einspeisung (W)",
+          "charge": "Batterieladung (W)",
+          "discharge": "Batterieentladung (W)"
         }
       }
     },
