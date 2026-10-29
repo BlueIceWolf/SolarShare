@@ -107,12 +107,14 @@
           "apartments": "Apartments",
           "pv_details": "String details (optional)",
           "advanced": "Advanced settings",
-          "finish": "Summary"
+          "finish": "Summary",
+          "wallboxes": "Wallboxes",
+          "tariffs": "Electricity tariffs"
         }
       },
       "finish": {
         "title": "6 · Review and save",
-        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.",
+        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.\n\n**Wallboxes:**\n{wallboxes}\n\n**Tariffs:** {tariffs}",
         "menu_options": {
           "save": "Save",
           "site_menu": "Edit settings"
@@ -131,6 +133,39 @@
         "title": "Select inverter",
         "data": {
           "inverter_id": "Inverter"
+        }
+      },
+      "wallboxes": {
+        "title": "Wallboxes",
+        "description": "Record wallboxes separately. Do not assign a wallbox meter whose load is already included in an apartment meter.",
+        "menu_options": {
+          "add_wallbox": "Add wallbox",
+          "select_wallbox": "Edit wallbox",
+          "site_menu": "Other settings"
+        }
+      },
+      "select_wallbox": {
+        "title": "Select wallbox",
+        "data": {
+          "wallbox_id": "Wallbox"
+        }
+      },
+      "wallbox": {
+        "title": "Wallbox and meter",
+        "description": "Assign a cumulative kWh meter, such as EVCC. Do not count electricity already included in an apartment meter. Per-card attribution is not yet implemented.",
+        "data": {
+          "name": "Name",
+          "meter": "Wallbox energy meter (kWh)",
+          "paused": "Pause wallbox",
+          "remove": "Remove wallbox"
+        }
+      },
+      "tariffs": {
+        "title": "Electricity tariffs",
+        "description": "Prices in EUR per kWh apply only to subsequently confirmed energy allocations. Unresolved-origin energy remains unpriced. Historic accrued costs never change.",
+        "data": {
+          "solar": "Solar electricity (EUR/kWh)",
+          "grid": "Grid electricity (EUR/kWh)"
         }
       }
     },
@@ -261,12 +296,14 @@
           "apartments": "Apartments",
           "pv_details": "String details (optional)",
           "advanced": "Advanced settings",
-          "finish": "Summary"
+          "finish": "Summary",
+          "wallboxes": "Wallboxes",
+          "tariffs": "Electricity tariffs"
         }
       },
       "finish": {
         "title": "6 · Review and save",
-        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.",
+        "description": "**Installation:** {name}\n\n**Inverters ({pv_count}), measurement boundary {pv_measurement}:**\n{pv}\n\n**Grid import:** {grid_import}\n\n**Grid export:** {grid_export}\n\n**Battery (charge / discharge):** {battery}\n\n**Apartments ({apartment_count}):**\n{apartments}\n\n**Optional string details:** {detail_count}\n\nOnly Save applies these settings. Choose Edit settings to correct any assignments.\n\n**Wallboxes:**\n{wallboxes}\n\n**Tariffs:** {tariffs}",
         "menu_options": {
           "save": "Save",
           "site_menu": "Edit settings"
@@ -285,6 +322,39 @@
         "title": "Select inverter",
         "data": {
           "inverter_id": "Inverter"
+        }
+      },
+      "wallboxes": {
+        "title": "Wallboxes",
+        "description": "Record wallboxes separately. Do not assign a wallbox meter whose load is already included in an apartment meter.",
+        "menu_options": {
+          "add_wallbox": "Add wallbox",
+          "select_wallbox": "Edit wallbox",
+          "site_menu": "Other settings"
+        }
+      },
+      "select_wallbox": {
+        "title": "Select wallbox",
+        "data": {
+          "wallbox_id": "Wallbox"
+        }
+      },
+      "wallbox": {
+        "title": "Wallbox and meter",
+        "description": "Assign a cumulative kWh meter, such as EVCC. Do not count electricity already included in an apartment meter. Per-card attribution is not yet implemented.",
+        "data": {
+          "name": "Name",
+          "meter": "Wallbox energy meter (kWh)",
+          "paused": "Pause wallbox",
+          "remove": "Remove wallbox"
+        }
+      },
+      "tariffs": {
+        "title": "Electricity tariffs",
+        "description": "Prices in EUR per kWh apply only to subsequently confirmed energy allocations. Unresolved-origin energy remains unpriced. Historic accrued costs never change.",
+        "data": {
+          "solar": "Solar electricity (EUR/kWh)",
+          "grid": "Grid electricity (EUR/kWh)"
         }
       }
     },
@@ -340,7 +410,8 @@
           "overlapping_pv_sources": "Same inverter counted twice",
           "observing_pv_night": "Calculation active – PV night mode (zero generation assumed)",
           "pv_night_transition": "New baseline for PV night/day transition",
-          "waiting_for_meter_window": "Collecting meter readings – waiting for a shared energy balance"
+          "waiting_for_meter_window": "Collecting meter readings – waiting for a shared energy balance",
+          "observing_ambiguous_interval": "Consumption recorded – source allocation uncertain for this interval"
         }
       }
     }
