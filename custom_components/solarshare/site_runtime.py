@@ -54,6 +54,8 @@ class SiteRuntime:
             pv_keys=self.pv_keys,
             require_fresh_reports=self.config.get("require_fresh_reports", False),
             aggregation_seconds=0 if self.config.get("require_fresh_reports", False) else 300,
+            balance_tolerance_kwh=self.config.get("balance_tolerance_kwh", "0.15"),
+            allow_mixed_directions=True,
         )
         self.store = Store(hass, 1, f"{DOMAIN}.site.{entry.entry_id}", atomic_writes=True)
         self.identities = {}
