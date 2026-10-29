@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .site_accounting import apartment_metric, percentage
 
-PERIODS = {"lifetime": "Gesamt", "day": "Heute", "month": "Monat", "year": "Jahr"}
+PERIODS = {"lifetime": "Gesamt", "day": "Heute", "week": "Diese Woche", "last_week": "Letzte Woche", "month": "Dieser Monat", "last_month": "Letzter Monat", "year": "Jahr"}
 APARTMENT_METRICS = {
     "consumption": ("Verbrauch", "mdi:home-lightning-bolt"),
     "solar": ("Solarenergie", "mdi:solar-power"),
@@ -228,7 +228,12 @@ class EnergyPoint(SiteEntity):
         if self.period == "lifetime" or self.metric in ("autarky", "self_consumption"):
             return None
         boundary = dt_util.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        if self.period == "month":
+        if self.period in ("last_week", "last_month"):
+            return None
+        if self.period == "week":
+            from datetime import timedelta
+            boundary -= timedelta(days=boundary.weekday())
+        elif self.period == "month":
             boundary = boundary.replace(day=1)
         elif self.period == "year":
             boundary = boundary.replace(month=1, day=1)
