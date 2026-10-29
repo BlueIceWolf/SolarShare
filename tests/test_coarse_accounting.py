@@ -1,12 +1,22 @@
 """Coarse upstream counters and fine apartment meters share one bounded window."""
 
 import importlib.util
+import sys
+import types
 import unittest
 from decimal import Decimal as D
 from pathlib import Path
 
+# Load the pure accounting code as a package so its calendar helper
+# resolves without installing Home Assistant.
+PACKAGE = "_solarshare_pure_tests"
+if PACKAGE not in sys.modules:
+    package = types.ModuleType(PACKAGE)
+    package.__path__ = [str(Path(__file__).parents[1] / "custom_components/solarshare")]
+    sys.modules[PACKAGE] = package
+
 SPEC = importlib.util.spec_from_file_location(
-    "coarse_ledger", Path(__file__).parents[1] / "custom_components/solarshare/site_accounting.py"
+    f"{PACKAGE}.coarse_ledger", Path(__file__).parents[1] / "custom_components/solarshare/site_accounting.py"
 )
 module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
