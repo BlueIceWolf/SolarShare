@@ -18,6 +18,7 @@ class SolarShareCard extends HTMLElement {
     if (!this.entities && !this.loading) this.load();
     this.render();
   }
+  static getStubConfig() { return {period: "month"}; }
   getCardSize() { return 8; }
   async load() {
     if (!this._hass || this.loading) return;
