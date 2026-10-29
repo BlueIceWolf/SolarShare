@@ -41,7 +41,8 @@
           "name": "Apartment name",
           "meter": "Cumulative consumption meter",
           "paused": "Pause apartment",
-          "remove": "Remove apartment from installation"
+          "remove": "Remove apartment from installation",
+          "power": "Live power (W/kW, optional)"
         }
       },
       "inverters": {
@@ -159,7 +160,8 @@
           "name": "Name",
           "meter": "Wallbox energy meter (kWh)",
           "paused": "Pause wallbox",
-          "remove": "Remove wallbox"
+          "remove": "Remove wallbox",
+          "power": "Live power (W/kW, optional)"
         }
       },
       "tariffs": {
@@ -195,7 +197,9 @@
       "missing_sources": "Select PV production, grid import and grid export meters.",
       "single_site": "An installation already exists. Add apartments in its configuration.",
       "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details.",
-      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source."
+      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source.",
+      "not_power": "Select a power sensor in W or kW.",
+      "duplicate_power": "A power sensor cannot be assigned to multiple units."
     },
     "abort": {
       "single_site": "An installation already exists. Add apartments in its configuration."
@@ -244,7 +248,8 @@
           "name": "Apartment name",
           "meter": "Cumulative consumption meter",
           "paused": "Pause apartment",
-          "remove": "Remove apartment from installation"
+          "remove": "Remove apartment from installation",
+          "power": "Live power (W/kW, optional)"
         }
       },
       "inverters": {
@@ -362,7 +367,8 @@
           "name": "Name",
           "meter": "Wallbox energy meter (kWh)",
           "paused": "Pause wallbox",
-          "remove": "Remove wallbox"
+          "remove": "Remove wallbox",
+          "power": "Live power (W/kW, optional)"
         }
       },
       "tariffs": {
@@ -398,7 +404,9 @@
       "missing_sources": "Select PV production, grid import and grid export meters.",
       "single_site": "An installation already exists. Add apartments in its configuration.",
       "pv_boundary_mismatch": "All summed inverter sources must use the same measurement boundary. Record DC string counters separately as string details.",
-      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source."
+      "overlapping_pv_sources": "The same Growatt has both Total Power Generation and Total Solar Energy assigned. Use only its appropriate AC total-yield source.",
+      "not_power": "Select a power sensor in W or kW.",
+      "duplicate_power": "A power sensor cannot be assigned to multiple units."
     }
   },
   "selectors": {
