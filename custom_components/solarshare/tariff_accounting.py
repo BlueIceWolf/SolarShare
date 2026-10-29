@@ -2,10 +2,7 @@
 
 from decimal import Decimal
 
-
-def period_key(period, day):
-    return {"lifetime": "lifetime", "day": f"day:{day}",
-            "month": f"month:{day[:7]}", "year": f"year:{day[:4]}"}[period]
+from .periods import WRITTEN_PERIODS, period_key
 
 
 class TariffLedger:
@@ -42,7 +39,7 @@ class TariffLedger:
         rates = {key: Decimal(str(tariffs[key])) for key in ("solar", "grid")}
         if any(not value.is_finite() or value < 0 for value in rates.values()):
             raise ValueError("Invalid tariffs")
-        for period in ("lifetime", "day", "month", "year"):
+        for period in WRITTEN_PERIODS:
             bucket = self.periods.setdefault(period_key(period, day), {})
             for unit, values in allocations.items():
                 amounts = bucket.setdefault(unit, {
