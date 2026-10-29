@@ -283,6 +283,7 @@ class SiteStatus(SiteEntity):
         "observing_pv_night",
         "pv_night_transition",
         "waiting_for_meter_window",
+        "observing_ambiguous_interval",
     ]
 
     def __init__(self, entry):
@@ -326,6 +327,7 @@ class SiteStatus(SiteEntity):
         ]
         result["require_fresh_reports"] = self.runtime.config.get("require_fresh_reports", False)
         result["aggregation_seconds"] = self.runtime.ledger.aggregation_seconds
+        result["balance_tolerance_kwh"] = str(self.runtime.ledger.balance_tolerance)
         result["pending_seconds"] = self.runtime.ledger.pending_seconds
         result["pending_balance"] = self.runtime.ledger.pending_balance
         if result["pending_balance"]:
