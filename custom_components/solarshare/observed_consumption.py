@@ -2,16 +2,7 @@
 
 from decimal import Decimal, InvalidOperation
 
-PERIODS = ("lifetime", "day", "month", "year")
-
-
-def period_key(period, day):
-    return {
-        "lifetime": "lifetime",
-        "day": f"day:{day}",
-        "month": f"month:{day[:7]}",
-        "year": f"year:{day[:4]}",
-    }[period]
+from .periods import WRITTEN_PERIODS, period_key
 
 
 class ObservedConsumption:
@@ -78,7 +69,7 @@ class ObservedConsumption:
         if delta > self.max_power * Decimal(str(elapsed)) / 3600 + Decimal("0.05"):
             self.gaps[unit] = self.gaps.get(unit, 0) + 1
             return False
-        for period in PERIODS:
+        for period in WRITTEN_PERIODS:
             key = period_key(period, day)
             bucket = self.totals.setdefault(key, {})
             bucket[unit] = bucket.get(unit, Decimal(0)) + delta
